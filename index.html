@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEDAAR TEXTILE LIMITED | PPC Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-orange: #f39c12;
+            --accent-blue: #3498db;
+            --bg-dark: #0f172a;
+            --card-glass: rgba(30, 41, 59, 0.7);
+            --sidebar-bg: rgba(15, 23, 42, 0.95);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* --- Login Overlay --- */
+        #loginOverlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .login-card {
+            background: var(--card-glass);
+            padding: 3rem;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: rgba(15, 23, 42, 0.6);
+            color: white;
+            outline: none;
+        }
+
+        .login-card button {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary-orange);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* --- Sidebar Navigation --- */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: none; /* Hidden until login */
+            flex-direction: column;
+            padding: 1.5rem;
+            z-index: 100;
+            height: 100vh; /* Fixed height to enable internal scrolling */
+        }
+
+        .brand-section {
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .brand-section h1 {
+            font-size: 1.2rem;
+            margin: 0;
+            color: var(--primary-orange);
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .menu-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex-grow: 1;
+            overflow-y: auto; /* Enables scrolling if links are many */
+            padding-right: 5px;
+        }
+
+        /* Scrollbar Styling for Sidebar */
+        .menu-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .menu-list::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        .nav-item {
+            display: none; /* Hidden based on auth */
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            text-decoration: none;
+            color: var(--text-main);
+            border-radius: 10px;
+            transition: 0.2s;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+
+        .nav-item:hover {
+            background: rgba(243, 156, 18, 0.1);
+            color: var(--primary-orange);
+        }
+
+        .user-footer {
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            flex-shrink: 0; /* Prevents footer from being pushed out */
+            margin-top: 1rem;
+        }
+
+        .btn-logout {
+            width: 100%;
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* --- Main Workspace --- */
+        .workspace {
+            flex-grow: 1;
+            display: none; /* Hidden until login */
+            position: relative;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .central-logo {
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        .logo-icon {
+            font-size: 8rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .logo-text h2 {
+            font-size: 2.5rem;
+            margin: 0;
+            font-weight: 800;
+            background: linear-gradient(to bottom, #fff, #64748b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text p {
+            color: var(--primary-orange);
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow-y: auto; }
+            .sidebar { 
+                width: 100%; 
+                height: auto; 
+                border-right: none; 
+                border-bottom: 1px solid var(--border-color);
+                position: relative;
+            }
+            .menu-list { max-height: 250px; }
+            .workspace { height: 60vh; }
+        }
+    </style>
+</head>
+<body onload="checkLogin()">
+
+    <div id="loginOverlay">
+        <div class="login-card">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🏢</div>
+            <h2>System Access</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">Cedaar Textile Limited | PPC</p>
+            <input type="text" id="username" placeholder="Employee Username">
+            <input type="password" id="password" placeholder="Access Password">
+            <button onclick="handleLogin()">Authorize Login</button>
+            <p id="errorMsg" style="color: #ef4444; margin-top:1rem; font-size: 0.85rem; display:none;">Access Denied: Invalid Credentials</p>
+        </div>
+    </div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="brand-section">
+            <h1>CEDAAR TEXTILE</h1>
+            <p style="font-size: 0.7rem; color: var(--text-muted); margin: 5px 0 0 0;">PRODUCTION CONTROL</p>
+        </div>
+
+        <nav class="menu-list">
+            <a href="production-booking.html" class="nav-item" id="card-spinning"><span>🧶</span> Spinning Prod. Book</a>
+            <a href="ring-summary.html" class="nav-item" id="card-ring"><span>🧶</span> Ring Report</a>
+            <a href="yarn-stock.html" class="nav-item" id="card-stock"><span>🧵</span> Monthly Yarn Stock</a>
+            <a href="dye-house.html" class="nav-item" id="card-dyeing"><span>🧪</span> Dye House Prod. Book</a>
+            <a href="production-summary.html" class="nav-item" id="card-summary"><span>📊</span> Prod. Summary</a>
+            <a href="sale-order.html" class="nav-item" id="card-sale"><span>📝</span> Sales Order Book</a>
+            <a href="sale-order-new.html" class="nav-item" id="card-sales"><span>📝</span> Sales Order & Fiber Issue</a>
+            <a href="production-tracking.html" class="nav-item" id="card-tracking"><span>📋</span> Sale Order Track</a>
+            <a href="production-tracking-date.html" class="nav-item" id="card-track"><span>📋</span> Production Track Date Wise</a>
+            <a href="raw-material.html" class="nav-item" id="card-raw"><span>📦</span> Raw Material</a>
+            <a href="fiber-cost.html" class="nav-item" id="card-cost"><span>📦</span> Mixing Fiber Cost</a>
+            <a href="scan-data.html" class="nav-item" id="card-scan"><span>📦</span> Scan Data Packing</a>
+            <a href="report-download.html" class="nav-item" id="card-download"><span>📦</span> Report Spinning Download</a>
+            <a href="report-download-sale-fiber.html" class="nav-item" id="card-downloadsale"><span>📦</span> Report Sale & Fiber Download</a>
+        </nav>
+
+        <div class="user-footer">
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Logged in as:</div>
+            <div id="displayUser" style="color: var(--primary-orange); font-weight: 700;"></div>
+            <button class="btn-logout" onclick="logout()">Logout System</button>
+        </div>
+    </aside>
+
+    <main class="workspace" id="dashboard">
+        <div class="central-logo">
+            <span class="logo-icon">🏢</span>
+            <div class="logo-text">
+                <h2>CEDAAR TEXTILE</h2>
+                <p>Limited</p>
+            </div>
+            <div style="margin-top: 2rem; color: var(--text-muted); font-size: 0.9rem;">
+                Select a department from the menu to begin
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const db = {
+            "prod": { pass: "123", access: ["card-spinning", "card-summary","card-download"] },
+            "sailesh": { pass: "123", access: ["card-spinning", "card-summary","card-tracking","card-download","card-ring"] },
+            "jpsingh": { pass: "123", access: ["card-spinning", "card-summary","card-tracking","card-download","card-ring","card-cost"] },
+            "pawan": { pass: "pawan123", access: ["card-spinning", "card-summary","card-download"] },
+            "rajrm": { pass: "raj@123", access: ["card-raw","card-cost"] },
+            "sale1": { pass: "123", access: ["card-scan"] },
+            "sale": { pass: "sale@123", access: ["card-sales","card-tracking","card-spinning","card-stock","card-downloadsale","card-scan"] },
+            "mdc": { pass: "mdc@123", access: ["card-sales","card-tracking","card-downloadsale","card-cost"] },
+            "admin": { pass: "Kp@123", access: ["card-spinning", "card-stock", "card-dyeing", "card-summary", "card-tracking","card-cost","card-track", "card-scan","card-sales","card-ring", "card-raw","card-download","card-downloadsale"] },
+            "mis": { pass: "123", access: [ "card-spinning", "card-stock", "card-dyeing", "card-summary", "card-tracking","card-track","card-cost", "card-scan","card-sales","card-ring", "card-raw","card-download","card-downloadsale"] }
+        };
+
+        function handleLogin() {
+            const user = document.getElementById('username').value.trim().toLowerCase();
+            const pass = document.getElementById('password').value;
+            if (db[user] && db[user].pass === pass) {
+                localStorage.setItem('cedaar_auth', user);
+                checkLogin();
+            } else {
+                document.getElementById('errorMsg').style.display = 'block';
+            }
+        }
+
+        function checkLogin() {
+            const user = localStorage.getItem('cedaar_auth');
+            if (user && db[user]) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('sidebar').style.display = 'flex';
+                document.getElementById('dashboard').style.display = 'flex';
+                document.getElementById('displayUser').innerText = user.toUpperCase();
+                
+                // Hide all items first
+                document.querySelectorAll('.nav-item').forEach(c => c.style.display = 'none');
+                
+                // Show allowed items in list
+                db[user].access.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'flex';
+                });
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('cedaar_auth');
+            location.reload();
+        }
+    </script>
+</body>
+</html>
