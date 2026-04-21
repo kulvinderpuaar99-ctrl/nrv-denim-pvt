@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cedaar Textile - Stock System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* --- LOGIN OVERLAY STYLES --- */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 62, 80, 0.98);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10000;
+        }
+        .login-box {
+            background: white; padding: 40px; border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 320px; text-align: center;
+        }
+        .login-box input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; }
+        .login-btn { width: 100%; padding: 12px; background: #1565c0; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }        
+        
+        /* Dashboard Styles */
+        #dashboard { display: flex; height: 100vh; background: #ecf0f1; }
+        .sidebar { width: 300px; background: rgba(44, 62, 80, 0.9); color: white; padding: 20px; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.5); z-index: 2; }
+        .logo-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        .company-title-card { background: rgba(255, 255, 255, 0.85); padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); backdrop-filter: blur(5px); display: flex; flex-direction: column; align-items: center; }
+        .company-name { font-size: 36px; font-weight: bold; color: #1a252f; margin: 0; }
+        .menu-title { font-size: 14px; color: #bdc3c7; text-transform: uppercase; margin-bottom: 20px; border-bottom: 1px solid #5d6d7e; padding-bottom: 10px; }
+        .nav-btn { background: #34495e; color: white; border: none; padding: 15px; margin-bottom: 12px; border-radius: 8px; text-align: left; cursor: pointer; font-size: 14px; font-weight: bold; transition: all 0.3s ease; }
+        .nav-btn:hover { background: #1565c0; transform: translateX(8px); }
+        
+        /* App View Styles */
+        #rawRecApp, #rawIssueApp, #balanceStockApp { display: none; padding: 10px; flex: 1; background: #f0f4f8; min-height: 100vh; }
+        
+        .scroll-container { height: 100vh; overflow-y: auto; }
+
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); max-width: 100%; margin: 0 auto; }
+        h2 { color: #2c3e50; border-left: 5px solid #2196f3; padding-left: 15px; margin-bottom: 10px; font-size: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 10px; font-weight: bold; color: #636e72; margin-bottom: 3px; text-transform: uppercase; }
+        input, select { width: 95%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px; }
+        .btn-submit { background: #27ae60; color: white; padding: 10px 30px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-top: 10px; }
+        .back-btn { background:#2c3e50; border:none; color:white; padding: 8px 15px; border-radius: 5px; cursor:pointer; font-weight:bold; margin-bottom:10px; }
+
+        /* View Control Bar */
+        .control-bar { background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #dee2e6; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+        .control-item { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: bold; color: #2c3e50; cursor: pointer; }
+        .control-item input { width: auto; cursor: pointer; }
+
+        /* Table Styles */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
+        th { background: #2c3e50; color: white; padding: 8px; text-align: left; position: sticky; top: 0; }
+        td { padding: 8px; border: 1px solid #dee2e6; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        .bal-pos { color: green; font-weight: bold; }
+        .bal-neg { color: red; font-weight: bold; }
+
+        /* Summary Labels */
+        .val-kg { display: block; }
+        .val-bal { color: #7f8c8d; font-size: 9px; display: block; }
+        .val-amt { color: #2980b9; font-weight: bold; font-size: 10px; display: block; margin-top: 2px; }
+        
+        /* Action Buttons */
+        .action-btn { padding: 8px 12px; margin-left: 5px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; color: white; }
+        .btn-excel { background: #1d6f42; }
+        .btn-print { background: #2980b9; }
+
+        .history-section { margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
+
+        @media print {
+            body, html { height: auto !important; overflow: visible !important; }
+            #rawRecApp, #rawIssueApp, #balanceStockApp { 
+                display: none; 
+                height: auto !important; 
+                overflow: visible !important; 
+                position: static !important;
+            }
+            #balanceStockApp[style*="display: block"] { display: block !important; }
+            
+            .back-btn, .nav-btn, .sidebar, .action-btn, #reportMonth, #stockFilter, .control-bar, .logo-area, .menu-title { 
+                display: none !important; 
+            }
+            .container { box-shadow: none !important; border: none !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            th { position: static !important; background-color: #eee !important; color: black !important; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+        }
+    </style>
+</head>
+<body>
+     <nav style="background-color: #000000; padding: 15px 0; text-align: left; font-family: 'Segoe UI', Arial, sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+  <style>
+    .nav-link { 
+      color: #ffffff; 
+      text-decoration: none; 
+      margin: 0 15px; 
+      font-weight: 500; 
+      font-size: 16px;
+      transition: color 0.3s;
+    }
+    .nav-link:hover { 
+      color: #e67e22; 
+      text-decoration: underline; 
+    }
+  </style>
+  <a href="index.html" class="nav-link">Return to Home🏠</a>
+</nav>
+
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2 style="color:#2c3e50; border:none; margin-bottom:20px;">Cedaar Textile Limited</h2>
+        <input type="text" id="userId" placeholder="User ID">
+        <input type="password" id="userPass" placeholder="Password">
+        <button class="login-btn" onclick="handleLogin()">LOGIN</button>
+    </div>
+</div>
+
+<div id="dashboard">
+    <div class="sidebar">
+        <div class="menu-title">Main Menu</div>
+        <button class="nav-btn" onclick="showApp('rawRec')">🚚 Raw Material Rec.</button>
+        <button class="nav-btn" onclick="showApp('rawIssue')">📤 Raw Material Issue</button>
+        <button class="nav-btn" onclick="showApp('balanceStock')" style="background: #e67e22;">📊 Monthly Stock Report</button>
+        
+        <div style="margin-top: auto; font-size: 11px; text-align: center; color: #ecf0f1; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px;">
+            <strong id="loggedUserDisplay">Cedaar Textile Limited</strong><br>ERP v2.8
+        </div>
+    </div>
+    <div class="logo-area">
+        <div class="company-title-card">
+            <h1 class="company-name">CEDAAR TEXTILE LIMITED</h1>
+            <p style="color: #1565c0; margin-top: 5px; font-weight: bold; letter-spacing: 3px; font-size: 14px;">STOCK ISSUANCE SYSTEM</p>
+        </div>
+    </div>
+</div>
+
+<div id="balanceStockApp" class="scroll-container">
+    <button onclick="goBack()" class="back-btn">← Return to Dashboard</button>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2>Monthly Balance Stock</h2>
+            <div>
+                <button class="action-btn btn-excel" onclick="exportToExcel()">Excel Download</button>
+                <button class="action-btn btn-print" onclick="window.print()">Print Report</button>
+            </div>
+        </div>
+
+        <div class="control-bar">
+            <span style="font-size: 11px; color: #7f8c8d; text-transform: uppercase;">Show Columns:</span>
+            <label class="control-item"><input type="checkbox" id="viewKg" checked onchange="updateView()"> KG</label>
+            <label class="control-item"><input type="checkbox" id="viewBales" checked onchange="updateView()"> Bales</label>
+            <label class="control-item"><input type="checkbox" id="viewAmt" checked onchange="updateView()"> Amount (Value)</label>
+            <div style="border-left: 1px solid #ccc; height: 20px; margin: 0 10px;"></div>
+            <label class="control-item" style="color: #d35400;"><input type="checkbox" id="hideZero" onchange="updateView()"> Hide Zero Stock</label>
+        </div>
+        
+        <div style="display: flex; gap: 15px; margin-bottom: 10px; align-items: flex-end;">
+            <div class="form-group"><label>Select Month</label><input type="month" id="reportMonth" onchange="loadBalanceStock()"></div>
+            <div class="form-group"><label>Search</label><input type="text" id="stockFilter" placeholder="Filter..." onkeyup="filterStockTable()" style="width:150px;"></div>
+        </div>
+
+        <table id="stockTable">
+            <thead>
+                <tr><th>Category</th><th>Item Description</th><th>Opening</th><th>Received</th><th>Issued</th><th>Closing</th><th>Status</th></tr>
+            </thead>
+            <tbody id="stockTableBody"><tr><td colspan="7">Select a month...</td></tr></tbody>
+            <tfoot id="stockTableFoot"></tfoot>
+        </table>
+    </div>
+</div>
+
+<div id="rawRecApp" class="scroll-container">
+    <button onclick="goBack()" class="back-btn">← Return to Dashboard</button>
+    <div class="container">
+        <h2 style="border-left-color: #27ae60;">Raw Material Receipt (GRN)</h2>
+        <form id="rawRecForm">
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 20px;">
+                <div class="form-group"><label>Date</label><input type="date" id="recDate"></div>
+                <div class="form-group"><label>Supplier Name</label><input type="text" id="recSupplier"></div>
+                <div class="form-group"><label>Inv. Number</label><input type="text" id="recGatePass"></div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="recCat" onchange="fetchRecItemsByCategory()">
+                        <option value="">Select Category</option>
+                        <option value="Market Purchase Waste">Market Purchase Waste</option>
+                        <option value="Plant Waste Production">Plant Waste Production</option>
+                        
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Item Description</label>
+                    <input type="text" id="recItem" list="recItemsList" placeholder="Type or select...">
+                    <datalist id="recItemsList"></datalist>
+                </div>
+                <div class="form-group"><label>Qty (KG)</label><input type="number" id="recQty" step="0.01" oninput="calculateRec()"></div>
+                <div class="form-group"><label>Bales</label><input type="number" id="recBales"></div>
+                <div class="form-group"><label>Rate</label><input type="number" id="recRate" step="0.01" oninput="calculateRec()"></div>
+                <div class="form-group"><label>Total Amount</label><input type="number" id="recAmount" readonly style="background:#f1f2f6;"></div>
+                <div class="form-group"><label>Remarks</label><input type="text" id="recRemarks"></div>
+            </div>
+            <div style="text-align: right; padding: 20px;"><button type="button" class="btn-submit" onclick="submitRawRec()">SAVE RECEIPT</button></div>
+        </form>
+        <div class="history-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3>Recent Receipts</h3>
+                <div style="display: flex; gap: 5px; align-items: flex-end;">
+                    <div class="form-group"><label>From</label><input type="date" id="recFrom" style="width:120px"></div>
+                    <div class="form-group"><label>To</label><input type="date" id="recTo" style="width:120px"></div>
+                    <button class="action-btn btn-excel" onclick="downloadFilteredExcel('recHistoryTable', 'recFrom', 'recTo', 'Raw_Material_Receipts')">Download</button>
+                </div>
+            </div>
+            <table id="recHistoryTable">
+                <thead>
+                    <tr><th>Date</th><th>Category</th><th>Supplier</th><th>Inv/GP</th><th>Item</th><th>Bales</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>
+                </thead>
+                <tbody id="recHistoryBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="rawIssueApp" class="scroll-container">
+    <button onclick="goBack()" class="back-btn">← Return to Dashboard</button>
+    <div class="container">
+        <h2 style="border-left-color: #8e44ad;">Raw Material Issue</h2>
+        <form id="rawIssueForm">
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 20px;">
+                <div class="form-group"><label>Date</label><input type="date" id="issDate"></div>
+                <div class="form-group"><label>Issue Slip No.</label><input type="text" id="issSlip"></div>
+                <div class="form-group">
+                    <label>Dept</label>
+                    <select id="issDept">
+                        <option value="">Select Dept</option>
+                        <option value="Spinning 4">Spinning 4</option>
+                        <option value="Dye House">Dye House</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="issCat" onchange="fetchItemsByCategory()">
+                        <option value="">Select Category</option>
+                        <option value="Market Purchase Waste">Market Purchase Waste</option>
+                        <option value="Plant Waste Production">Plant Waste Production</option>
+                                            </select>
+                </div>
+                <div class="form-group"><label>Item Description</label><select id="issItem" onchange="fetchItemStats()"><option value="">Select Item</option></select></div>
+                <div class="form-group"><label style="color: #1565c0;">Available (KG)</label><input type="number" id="issStockBal" readonly style="background:#e3f2fd; font-weight:bold;"></div>
+                <div class="form-group"><label>Issue Qty (KG)</label><input type="number" id="issQty" step="0.01" oninput="calculateIss()"></div>
+                <div class="form-group"><label>Bales</label><input type="number" id="issBales"></div>
+                <div class="form-group"><label>Rate (Avg)</label><input type="number" id="issRate" step="0.01" readonly style="background:#f1f2f6;"></div>
+                <div class="form-group"><label>Total Amount</label><input type="number" id="issAmount" readonly style="background:#f1f2f6;"></div>
+                <div class="form-group"><label>Remarks</label><input type="text" id="issRemarks"></div>
+            </div>
+            <div style="text-align: right; padding: 20px;"><button type="button" class="btn-submit" onclick="submitRawIssue()" style="background:#8e44ad">CONFIRM ISSUE</button></div>
+        </form>
+        <div class="history-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3>Recent Issues</h3>
+                <div style="display: flex; gap: 5px; align-items: flex-end;">
+                    <div class="form-group"><label>From</label><input type="date" id="issFrom" style="width:120px"></div>
+                    <div class="form-group"><label>To</label><input type="date" id="issTo" style="width:120px"></div>
+                    <button class="action-btn btn-excel" onclick="downloadFilteredExcel('issHistoryTable', 'issFrom', 'issTo', 'Raw_Material_Issues')">Download</button>
+                </div>
+            </div>
+            <table id="issHistoryTable">
+                <thead>
+                    <tr><th>Date</th><th>Category</th><th>Dept</th><th>Item</th><th>Bales</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>
+                </thead>
+                <tbody id="issHistoryBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxTO3fc8hh7PBrLJI95YECv-H67eWbmzbyB7TDcgLRXGGg0ua-zzWVLMKKwe5jZS63iyw/exec';
+    
+    const VALID_USERS = {
+        "admin": "Kp@123",
+        "rajrm": "raj@123",
+        "mis": "123"
+    };
+
+    let currentUser = "";
+    let cachedReceipts = [];
+    let cachedIssues = [];
+    let cachedArticles = []; // NEW: Cache for Article Master data
+    let globalStockMap = {};
+
+    window.onload = () => { 
+        document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7); 
+    };
+
+    function handleLogin() {
+        const id = document.getElementById('userId').value;
+        const pass = document.getElementById('userPass').value;
+        if(VALID_USERS[id] && VALID_USERS[id] === pass) {
+            currentUser = id;
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('loggedUserDisplay').innerText = "User: " + id.toUpperCase();
+        } else {
+            alert("Invalid User ID or Password");
+        }
+    }
+
+    async function showApp(appId) {
+        document.querySelectorAll('.scroll-container').forEach(div => div.style.display = 'none');
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById(appId + 'App').style.display = 'block';
+        if(appId === 'rawRec') {
+            document.getElementById('recDate').valueAsDate = new Date();
+            loadHistory('RAW_MATERIAL_REC', 'recHistoryBody');
+            refreshRecCache();
+            refreshArticleCache(); // NEW: Fetch the Article Master when opening Receipt App
+        }
+        if(appId === 'rawIssue') {
+            document.getElementById('issDate').valueAsDate = new Date();
+            loadHistory('RAW_MATERIAL_ISSUE', 'issHistoryBody');
+        }
+        if(appId === 'balanceStock') loadBalanceStock();
+    }
+
+    async function refreshRecCache() {
+        try { 
+            const res = await fetch(`${API_URL}?Department=RAW_MATERIAL_REC&t=${Date.now()}`); 
+            cachedReceipts = await res.json(); 
+        } catch(e){}
+    }
+
+    // NEW FUNCTION: Fetch the Article Master data
+    async function refreshArticleCache() {
+        try {
+            const res = await fetch(`${API_URL}?Department=ARTICLE_MASTER&t=${Date.now()}`);
+            cachedArticles = await res.json();
+        } catch(e) {
+            console.error("Error fetching Article Master: ", e);
+        }
+    }
+
+    // MODIFIED FUNCTION: Fetch Items by Category from ARTICLE_MASTER instead of Receipts
+    function fetchRecItemsByCategory() {
+        const cat = document.getElementById('recCat').value;
+        const list = document.getElementById('recItemsList');
+        list.innerHTML = "";
+        
+        // Filter from the Article Master sheet
+        const items = [...new Set(cachedArticles.filter(r => {
+            // Check headers mapping correctly to user's specified column names, handling potential double spaces
+            const rowCat = r["Raw Material Category"] || r["Raw Material  Category"] || "";
+            return rowCat.trim().toUpperCase() === cat.trim().toUpperCase();
+        }).map(r => r["Article"] || r["Article"] || ""))];
+
+        items.forEach(i => { if(i) list.innerHTML += `<option value="${i}">`; });
+    }
+
+    async function loadHistory(dept, bodyId) {
+        const body = document.getElementById(bodyId);
+        body.innerHTML = "<tr><td colspan='9'>Loading...</td></tr>";
+        try {
+            const res = await fetch(`${API_URL}?Department=${dept}&t=${Date.now()}`);
+            const data = await res.json();
+            body.innerHTML = "";
+            data.reverse().forEach(row => {
+                let dateStr = "";
+                let isoDate = "";
+                if(row["Date"]) {
+                    const d = new Date(row["Date"]);
+                    dateStr = d.toLocaleDateString('en-GB'); 
+                    
+                    // FIXED: Generate YYYY-MM-DD manually to avoid UTC shift
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    isoDate = `${y}-${m}-${day}`;
+                }
+                
+                if(dept === 'RAW_MATERIAL_REC') {
+                    body.innerHTML += `<tr data-date="${isoDate}">
+                        <td>${dateStr}</td>
+                        <td>${row["Category"]||""}</td>
+                        <td>${row["Supplier Name"]||""}</td>
+                        <td>${row["Gate Pass / Invoice"]||""}</td>
+                        <td>${row["Item Description"]}</td>
+                        <td>${row["Bales"]||0}</td>
+                        <td>${row["Qty (KG)"]}</td>
+                        <td>${row["Rate"]}</td>
+                        <td>${row["Total Amount"]}</td>
+                    </tr>`;
+                } else {
+                    body.innerHTML += `<tr data-date="${isoDate}">
+                        <td>${dateStr}</td>
+                        <td>${row["Category"]||""}</td>
+                        <td>${row["Issuing To (Dept)"]||""}</td>
+                        <td>${row["Item Description"]}</td>
+                        <td>${row["Bales"]||0}</td>
+                        <td>${row["Qty (KG)"]}</td>
+                        <td>${row["Rate"]}</td>
+                        <td>${row["Total Amount"]}</td>
+                    </tr>`;
+                }
+            });
+        } catch(e) { body.innerHTML = "<tr><td colspan='9'>Error</td></tr>"; }
+    }
+
+    function goBack() {
+        document.querySelectorAll('.scroll-container').forEach(div => div.style.display = 'none');
+        document.getElementById('dashboard').style.display = 'flex';
+    }
+
+    function updateView() { renderTable(); }
+
+    async function loadBalanceStock() {
+        const tbody = document.getElementById('stockTableBody');
+        const month = document.getElementById('reportMonth').value;
+        if(!month) return;
+        tbody.innerHTML = "<tr><td colspan='7'>Calculating...</td></tr>";
+        try {
+            const [rR, rI] = await Promise.all([
+                fetch(`${API_URL}?Department=RAW_MATERIAL_REC&t=${Date.now()}`), 
+                fetch(`${API_URL}?Department=RAW_MATERIAL_ISSUE&t=${Date.now()}`)
+            ]);
+            const recs = await rR.json(); const iss = await rI.json();
+            globalStockMap = {};
+            const proc = (data, type) => {
+                data.forEach(item => {
+                    if (!item["Date"]) return;
+                    const dateVal = new Date(item["Date"]);
+                    const year = dateVal.getFullYear();
+                    const monthNum = String(dateVal.getMonth() + 1).padStart(2, '0');
+                    const itemMonth = `${year}-${monthNum}`;
+                    const k = (item["Category"]||"N/A").trim().toUpperCase() + "|" + (item["Item Description"]||"").trim().toUpperCase();
+                    if(!globalStockMap[k]) globalStockMap[k] = { category: (item["Category"]||""), item: (item["Item Description"]||""), opKg: 0, opBal: 0, opAmt: 0, reKg: 0, reBal: 0, reAmt: 0, isKg: 0, isBal: 0, isAmt: 0 };
+                    const q = parseFloat(item["Qty (KG)"]||0), b = parseFloat(item["Bales"]||0), a = parseFloat(item["Total Amount"]||0);
+                    if(itemMonth < month) { 
+                        globalStockMap[k].opKg += (type==='r'?q:-q); globalStockMap[k].opBal += (type==='r'?b:-b); globalStockMap[k].opAmt += (type==='r'?a:-a); 
+                    }
+                    else if(itemMonth === month) { 
+                        if(type==='r'){ globalStockMap[k].reKg+=q; globalStockMap[k].reBal+=b; globalStockMap[k].reAmt+=a; } 
+                        else { globalStockMap[k].isKg+=q; globalStockMap[k].isBal+=b; globalStockMap[k].isAmt+=a; } 
+                    }
+                });
+            };
+            proc(recs, 'r'); proc(iss, 'i'); renderTable();
+        } catch(e){ tbody.innerHTML = "<tr><td colspan='7'>Error</td></tr>"; }
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('stockTableBody');
+        const sK = document.getElementById('viewKg').checked, sB = document.getElementById('viewBales').checked, sA = document.getElementById('viewAmt').checked, hZ = document.getElementById('hideZero').checked;
+        tbody.innerHTML = "";
+        let gOK=0, gOB=0, gOA=0, gRK=0, gRB=0, gRA=0, gIK=0, gIB=0, gIA=0, gCK=0, gCB=0, gCA=0;
+        for(let k in globalStockMap) {
+            let e = globalStockMap[k], ck = e.opKg+e.reKg-e.isKg, cb = e.opBal+e.reBal-e.isBal, ca = e.opAmt+e.reAmt-e.isAmt;
+            if(hZ && ck <= 0) continue;
+            gOK+=e.opKg; gOB+=e.opBal; gOA+=e.opAmt; gRK+=e.reKg; gRB+=e.reBal; gRA+=e.reAmt; gIK+=e.isKg; gIB+=e.isBal; gIA+=e.isAmt; gCK+=ck; gCB+=cb; gCA+=ca;
+            const fmt = (k,b,a,p="") => (sK?`<span class="val-kg">${p}${k.toFixed(2)} KG</span>`:"") + (sB?`<span class="val-bal">${p}${b.toFixed(0)} Bales</span>`:"") + (sA?`<span class="val-amt">₹${a.toFixed(2)}</span>`:"");
+            tbody.innerHTML += `<tr><td>${e.category}</td><td>${e.item}</td><td>${fmt(e.opKg,e.opBal,e.opAmt)}</td><td style="color:green">${fmt(e.reKg,e.reBal,e.reAmt,"+ ")}</td><td style="color:red">${fmt(e.isKg,e.isBal,e.isAmt,"- ")}</td><td class="${ck>=0?'bal-pos':'bal-neg'}">${fmt(ck,cb,ca)}</td><td>${ck<=0?'NIL':'OK'}</td></tr>`;
+        }
+        const fF = (k,b,a) => (sK?k.toFixed(2)+" KG<br>":"")+(sB?b.toFixed(0)+" Bales<br>":"")+(sA?"₹"+a.toFixed(2):"");
+        document.getElementById('stockTableFoot').innerHTML = `<tr style="background:#2c3e50; color:white; font-weight:bold;"><td colspan="2">TOTAL:</td><td>${fF(gOK,gOB,gOA)}</td><td>${fF(gRK,gRB,gRA)}</td><td>${fF(gIK,gIB,gIA)}</td><td>${fF(gCK,gCB,gCA)}</td><td></td></tr>`;
+    }
+
+    function calculateRec() { const q = document.getElementById('recQty').value||0, r = document.getElementById('recRate').value||0; document.getElementById('recAmount').value = (q*r).toFixed(2); }
+    function calculateIss() { const q = document.getElementById('issQty').value||0, r = document.getElementById('issRate').value||0; document.getElementById('issAmount').value = (q*r).toFixed(2); }
+
+    async function fetchItemsByCategory() {
+        const cat = document.getElementById('issCat').value, sel = document.getElementById('issItem');
+        sel.innerHTML = '<option>Loading...</option>';
+        try {
+            const [rR, rI] = await Promise.all([
+                fetch(`${API_URL}?Department=RAW_MATERIAL_REC&t=${Date.now()}`), 
+                fetch(`${API_URL}?Department=RAW_MATERIAL_ISSUE&t=${Date.now()}`)
+            ]);
+            cachedReceipts = await rR.json(); cachedIssues = await rI.json();
+            const items = [...new Set(cachedReceipts.filter(r => (r["Category"]||"").toUpperCase() === cat.toUpperCase()).map(r => r["Item Description"]))];
+            sel.innerHTML = '<option value="">Select Item</option>';
+            items.forEach(i => { if(i) sel.innerHTML += `<option value="${i}">${i}</option>`; });
+        } catch(e){}
+    }
+
+    function fetchItemStats() {
+        const cat = document.getElementById('issCat').value, itm = document.getElementById('issItem').value;
+        if(!cat || !itm) return;
+        let tR=0, tQ=0, tI=0;
+        cachedReceipts.filter(r => r["Category"]===cat && r["Item Description"]===itm).forEach(m => { tR+=parseFloat(m["Total Amount"]||0); tQ+=parseFloat(m["Qty (KG)"]||0); });
+        cachedIssues.filter(i => i["Category"]===cat && i["Item Description"]===itm).forEach(m => { tI+=parseFloat(m["Qty (KG)"]||0); });
+        document.getElementById('issRate').value = tQ>0 ? (tR/tQ).toFixed(2) : 0;
+        document.getElementById('issStockBal').value = (tQ - tI).toFixed(2);
+        calculateIss();
+    }
+
+    async function executePost(data, msg, formId, dept, histId) {
+        try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ data: [data] }) }); alert(msg); if(formId){ document.getElementById(formId).reset(); loadHistory(dept, histId); } } catch(e){ alert("Error"); }
+    }
+
+    function submitRawRec() {
+        const d = { 
+            "Department": "RAW_MATERIAL_REC", 
+            "Date": document.getElementById('recDate').value, 
+            "Supplier Name": document.getElementById('recSupplier').value, 
+            "Gate Pass / Invoice": document.getElementById('recGatePass').value, 
+            "Category": document.getElementById('recCat').value, 
+            "Item Description": document.getElementById('recItem').value, 
+            "Qty (KG)": document.getElementById('recQty').value, 
+            "Bales": document.getElementById('recBales').value, 
+            "Rate": document.getElementById('recRate').value, 
+            "Total Amount": document.getElementById('recAmount').value, 
+            "Remarks": document.getElementById('recRemarks').value, 
+            "User": currentUser 
+        };
+        executePost(d, "Saved!", "rawRecForm", "RAW_MATERIAL_REC", "recHistoryBody");
+    }
+
+    function submitRawIssue() {
+        const d = { 
+            "Department": "RAW_MATERIAL_ISSUE", 
+            "Date": document.getElementById('issDate').value, 
+            "Issue Slip No.": document.getElementById('issSlip').value, 
+            "Issuing To (Dept)": document.getElementById('issDept').value, 
+            "Category": document.getElementById('issCat').value, 
+            "Item Description": document.getElementById('issItem').value, 
+            "Qty (KG)": document.getElementById('issQty').value, 
+            "Bales": document.getElementById('issBales').value, 
+            "Rate": document.getElementById('issRate').value, 
+            "Total Amount": document.getElementById('issAmount').value, 
+            "Remarks": document.getElementById('issRemarks').value, 
+            "User": currentUser 
+        };
+        executePost(d, "Saved!", "rawIssueForm", "RAW_MATERIAL_ISSUE", "issHistoryBody");
+    }
+
+    function downloadFilteredExcel(tableId, fromId, toId, fileName) {
+        const fromDate = document.getElementById(fromId).value;
+        const toDate = document.getElementById(toId).value;
+        if(!fromDate || !toDate) { alert("Please select both From and To dates"); return; }
+        const table = document.getElementById(tableId);
+        const tempTable = document.createElement('table');
+        tempTable.appendChild(table.rows[0].cloneNode(true));
+        Array.from(table.rows).slice(1).forEach(row => {
+            const rowDate = row.getAttribute('data-date');
+            if(rowDate && rowDate >= fromDate && rowDate <= toDate) {
+                tempTable.appendChild(row.cloneNode(true));
+            }
+        });
+        if(tempTable.rows.length <= 1) { alert("No data found for this date range"); return; }
+        XLSX.writeFile(XLSX.utils.table_to_book(tempTable), `${fileName}_${fromDate}_to_${toDate}.xlsx`);
+    }
+
+    function exportToExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById("stockTable")), "Stock.xlsx"); }
+    function filterStockTable() { let val = document.getElementById("stockFilter").value.toUpperCase(); Array.from(document.getElementById("stockTableBody").rows).forEach(r => r.style.display = r.textContent.toUpperCase().includes(val) ? "" : "none"); }
+</script>
+</body>
+</html>
