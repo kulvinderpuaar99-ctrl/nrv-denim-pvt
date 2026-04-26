@@ -43,6 +43,17 @@
         .report-title h1 { margin: 0; font-size: 24px; color: var(--primary); letter-spacing: 1px; }
         .report-title p { margin: 5px 0 0; color: var(--secondary); font-weight: bold; font-size: 12px; text-transform: uppercase; }
 
+        /* Print Only Month Display */
+        #printMonthDisplay {
+            display: none;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 5px;
+        }
+
         .container { padding: 20px 40px; max-width: 1600px; margin: 0 auto; }
 
         /* Control Bar */
@@ -75,7 +86,7 @@
         th { background: #f8f9fa; color: #34495e; font-weight: 600; padding: 12px 15px; text-align: left; border-bottom: 2px solid #edf2f7; font-size: 13px; }
         td { padding: 12px 15px; border-bottom: 1px solid #edf2f7; font-size: 13px; vertical-align: top; color: #2d3748; }
         
-        /* Footer Specific Fix */
+        /* Footer Visual Fix */
         #stockTableFoot tr { background: var(--footer-bg) !important; }
         #stockTableFoot td { color: #ffffff !important; font-weight: bold; border: none; padding: 15px; }
 
@@ -89,12 +100,12 @@
         .val-kg { display: block; font-weight: 500; }
         .val-bal { color: #718096; font-size: 11px; display: block; }
         .val-amt { color: var(--secondary); font-weight: bold; font-size: 11px; display: block; margin-top: 2px; }
-        #stockTableFoot .val-amt { color: #81ecec !important; }
 
         @media print {
             nav, .control-panel, .btn { display: none !important; }
+            #printMonthDisplay { display: block !important; }
             .container { padding: 0; width: 100%; }
-            th { background-color: #eee !important; color: black !important; }
+            .report-header { border: none; }
         }
     </style>
 </head>
@@ -102,16 +113,17 @@
 
 <nav>
     <a href="index.html" class="nav-link"><i class="fa fa-home"></i> Return to Home 🏠</a>
-    <span style="color: #666; font-size: 12px; font-weight: bold;">NRV Denim ERP | Stock Report v3.1</span>
+    <span style="color: #666; font-size: 12px; font-weight: bold;">NRV Denim ERP | Professional Report</span>
 </nav>
 
 <div class="report-header">
     <div class="report-title">
         <h1>NRV DENIM PRIVATE LIMITED</h1>
         <p>Material Balance & Departmental Issuance Report</p>
+        <div id="printMonthDisplay"></div>
     </div>
     <div style="display: flex; gap: 10px;">
-        <button class="btn btn-excel" onclick="exportToExcel()"><i class="fa fa-file-excel"></i> Export Excel</button>
+        <button class="btn btn-excel" onclick="exportProfessionalExcel()"><i class="fa fa-file-excel"></i> Export Pro Excel</button>
         <button class="btn btn-print" onclick="window.print()"><i class="fa fa-print"></i> Print Report</button>
     </div>
 </div>
@@ -177,6 +189,12 @@
         const icon = document.getElementById('refreshIcon');
         const tbody = document.getElementById('stockTableBody');
         const month = document.getElementById('reportMonth').value;
+        
+        // Set Month Name for Print Preview
+        const dateObj = new Date(month + "-01");
+        const monthName = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+        document.getElementById('printMonthDisplay').innerText = "STOCK REPORT FOR: " + monthName.toUpperCase();
+
         icon.classList.add('fa-spin');
         
         try {
@@ -221,9 +239,7 @@
                     }
                 });
             };
-            proc(recs, 'r'); 
-            proc(iss, 'i'); 
-            renderTable();
+            proc(recs, 'r'); proc(iss, 'i'); renderTable();
         } catch(e) { tbody.innerHTML = "<tr><td colspan='8'>Error loading data.</td></tr>"; }
         finally { icon.classList.remove('fa-spin'); }
     }
@@ -274,7 +290,7 @@
                 </tr>`;
         }
 
-        const fF = (kg, bal, amt) => (
+        const footerFormat = (kg, bal, amt) => (
             (sK ? kg.toLocaleString(undefined, {minimumFractionDigits: 2}) + " KG<br>" : "") +
             (sB ? bal.toLocaleString() + " Bales<br>" : "") +
             (sA ? "₹ " + amt.toLocaleString(undefined, {minimumFractionDigits: 2}) : "")
@@ -283,16 +299,55 @@
         const colSpan = sD ? 3 : 2;
         document.getElementById('stockTableFoot').innerHTML = `
             <tr>
-                <td colspan="${colSpan}">GRAND TOTAL:</td>
-                <td>${fF(t.ok, t.ob, t.oa)}</td>
-                <td>${fF(t.rk, t.rb, t.ra)}</td>
-                <td>${fF(t.ik, t.ib, t.ia)}</td>
-                <td>${fF(t.ck, t.cb, t.ca)}</td>
+                <td colspan="${colSpan}" style="color:white !important;">GRAND TOTAL:</td>
+                <td style="color:white !important;">${footerFormat(t.ok, t.ob, t.oa)}</td>
+                <td style="color:white !important;">${footerFormat(t.rk, t.rb, t.ra)}</td>
+                <td style="color:white !important;">${footerFormat(t.ik, t.ib, t.ia)}</td>
+                <td style="color:white !important;">${footerFormat(t.ck, t.cb, t.ca)}</td>
                 <td></td>
             </tr>`;
     }
 
-    function exportToExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById("stockTable")), "NRV_Stock_Report.xlsx"); }
+    function exportProfessionalExcel() {
+        const data = [];
+        const headers = [
+            "Category", "Item Description", "Dept Issues Breakdown",
+            "Opening KG", "Opening Bales", "Opening Value",
+            "Received KG", "Received Bales", "Received Value",
+            "Issued KG", "Issued Bales", "Issued Value",
+            "Closing KG", "Closing Bales", "Closing Value",
+            "Status"
+        ];
+        data.push(headers);
+
+        for(let k in globalStockMap) {
+            let e = globalStockMap[k];
+            let ck = e.opKg+e.reKg-e.isKg, cb = e.opBal+e.reBal-e.isBal, ca = e.opAmt+e.reAmt-e.isAmt;
+            
+            let deptTxt = Object.keys(e.deptIssues).length > 0 
+                ? Object.entries(e.deptIssues).map(([d, v]) => `${d}: ${v.kg}KG`).join(" | ") 
+                : "No Issues";
+
+            data.push([
+                e.category, e.item, deptTxt,
+                e.opKg, e.opBal, e.opAmt,
+                e.reKg, e.reBal, e.reAmt,
+                e.isKg, e.isBal, e.isAmt,
+                ck, cb, ca,
+                ck > 0 ? "IN STOCK" : "NIL"
+            ]);
+        }
+
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Stock Report");
+        
+        // Professional Formatting for Excel Columns
+        ws['!cols'] = [{wch:15}, {wch:30}, {wch:35}, {wch:12}, {wch:12}, {wch:15}, {wch:12}, {wch:12}, {wch:15}, {wch:12}, {wch:12}, {wch:15}, {wch:12}, {wch:12}, {wch:15}, {wch:10}];
+        
+        XLSX.writeFile(wb, `NRV_Stock_Report_${document.getElementById('reportMonth').value}.xlsx`);
+    }
+
     function filterStockTable() { 
         let val = document.getElementById("stockFilter").value.toUpperCase(); 
         Array.from(document.getElementById("stockTableBody").rows).forEach(r => r.style.display = r.textContent.toUpperCase().includes(val) ? "" : "none"); 
