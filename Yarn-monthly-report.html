@@ -13,10 +13,7 @@
             --border: #dee2e6;
             --footer-bg: #2c3e50;
         }
-
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--light-bg); }
-
-        /* Navigation Bar */
         nav {
             background-color: #000000;
             padding: 12px 30px;
@@ -30,8 +27,6 @@
         }
         .nav-link { color: white; text-decoration: none; font-weight: 500; font-size: 15px; transition: 0.3s; }
         .nav-link:hover { color: var(--accent); }
-
-        /* Header Area */
         .report-header {
             background: white;
             padding: 20px 40px;
@@ -42,8 +37,6 @@
         }
         .report-title h1 { margin: 0; font-size: 24px; color: var(--primary); letter-spacing: 1px; }
         .report-title p { margin: 5px 0 0; color: var(--secondary); font-weight: bold; font-size: 12px; text-transform: uppercase; }
-
-        /* Print Only Month Display */
         #printMonthDisplay {
             display: none;
             font-size: 18px;
@@ -53,10 +46,7 @@
             border-bottom: 2px solid #2c3e50;
             padding-bottom: 5px;
         }
-
         .container { padding: 20px 40px; max-width: 1600px; margin: 0 auto; }
-
-        /* Control Bar */
         .control-panel {
             background: white;
             padding: 15px;
@@ -71,36 +61,26 @@
         .filter-group { display: flex; flex-direction: column; gap: 5px; }
         .filter-group label { font-size: 11px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; }
         input[type="month"], input[type="date"], input[type="text"], select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 5px; outline: none; background: white; font-family: inherit;}
-        
         .btn { padding: 10px 18px; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
         .btn-refresh { background: #34495e; color: white; }
         .btn-excel { background: #1d6f42; color: white; }
         .btn-print { background: #2980b9; color: white; }
-
         .toggles { display: flex; gap: 15px; align-items: center; border-left: 1px solid #ddd; padding-left: 20px; }
         .toggles label { font-size: 12px; color: var(--primary); font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 4px; }
-
-        /* Table Styles */
         .table-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; }
         th { background: #f8f9fa; color: #34495e; font-weight: 600; padding: 12px 15px; text-align: left; border-bottom: 2px solid #edf2f7; font-size: 13px; }
         td { padding: 12px 15px; border-bottom: 1px solid #edf2f7; font-size: 13px; vertical-align: top; color: #2d3748; }
-        
-        /* Footer Visual Fix */
         #stockTableFoot tr { background: var(--footer-bg) !important; }
         #stockTableFoot td { color: #ffffff !important; font-weight: bold; border: none; padding: 15px; }
-
         .dept-item { background: #f1f5f9; border-left: 3px solid var(--secondary); padding: 6px 10px; margin-bottom: 5px; border-radius: 4px; }
         .dept-name { font-weight: bold; font-size: 11px; color: #1e293b; display: block; }
         .dept-stats { font-size: 10px; color: #e67e22; font-weight: bold; }
-
         .status-ok { background: #c6f6d5; color: #22543d; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; }
         .status-nil { background: #fed7d7; color: #822727; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; }
-
         .val-kg { display: block; font-weight: 500; }
         .val-bal { color: #718096; font-size: 11px; display: block; }
         .val-amt { color: var(--secondary); font-weight: bold; font-size: 11px; display: block; margin-top: 2px; }
-
         @media print {
             nav, .control-panel, .btn { display: none !important; }
             #printMonthDisplay { display: block !important; }
@@ -110,7 +90,6 @@
     </style>
 </head>
 <body>
-
 <nav>
     <a href="index.html" class="nav-link"><i class="fa fa-home"></i> Return to Home 🏠</a>
     <span style="color: #666; font-size: 12px; font-weight: bold;">NRV Denim ERP | Professional Report</span>
@@ -145,16 +124,13 @@
             <label>Date</label>
             <input type="date" id="reportDate" onchange="loadBalanceStock()">
         </div>
-        
         <div class="filter-group">
             <label>Search</label>
-            <input type="text" id="stockFilter" placeholder="Filter Category, Item or Lot..." onkeyup="filterStockTable()">
+            <input type="text" id="stockFilter" placeholder="Filter Category or Item..." onkeyup="filterStockTable()">
         </div>
-        
         <button class="btn btn-refresh" onclick="loadBalanceStock()">
             <i class="fa fa-sync-alt" id="refreshIcon"></i> Refresh Report
         </button>
-
         <div class="toggles">
             <label><input type="checkbox" id="viewDept" checked onchange="updateView()"> Dept Details</label>
             <label><input type="checkbox" id="viewKg" checked onchange="updateView()"> KG</label>
@@ -168,10 +144,9 @@
         <table id="stockTable">
             <thead>
                 <tr>
-                    <th style="width: 10%;">Category</th>
-                    <th style="width: 10%;">Lot No.</th>
-                    <th style="width: 15%;">Item Description</th>
-                    <th id="thDept" style="width: 18%;">Dept. Wise Issue (Qty)</th>
+                    <th style="width: 12%;">Category</th>
+                    <th style="width: 18%;">Item Description</th>
+                    <th id="thDept" style="width: 20%;">Dept. Wise Issue (Qty)</th>
                     <th>Opening Bal</th>
                     <th>Received (+)</th>
                     <th>Issued (-)</th>
@@ -180,7 +155,7 @@
                 </tr>
             </thead>
             <tbody id="stockTableBody">
-                <tr><td colspan="9" style="text-align: center; padding: 40px;">Fetching data...</td></tr>
+                <tr><td colspan="8" style="text-align: center; padding: 40px;">Fetching data...</td></tr>
             </tbody>
             <tfoot id="stockTableFoot"></tfoot>
         </table>
@@ -210,7 +185,6 @@
     async function loadBalanceStock() {
         const icon = document.getElementById('refreshIcon');
         const tbody = document.getElementById('stockTableBody');
-        
         const periodType = document.getElementById('periodType').value;
         const targetMonth = document.getElementById('reportMonth').value;
         const targetDate = document.getElementById('reportDate').value;
@@ -226,9 +200,7 @@
         }
 
         icon.classList.add('fa-spin');
-        
         try {
-            // UPDATED TAB NAMES HERE
             const [rR, rI] = await Promise.all([
                 fetch(`${API_URL}?Department=YARN_REC&t=${Date.now()}`), 
                 fetch(`${API_URL}?Department=YARN_ISSUE&t=${Date.now()}`)
@@ -244,35 +216,17 @@
                     const itemMonth = `${dateVal.getFullYear()}-${String(dateVal.getMonth() + 1).padStart(2, '0')}`;
                     const tzOffset = (new Date()).getTimezoneOffset() * 60000;
                     const itemDateStr = (new Date(dateVal - tzOffset)).toISOString().split('T')[0];
-
-                    const cat = (item["Category"]||"N/A").trim().toUpperCase();
-                    const lot = (item["Lot No."]||"N/A").trim().toUpperCase();
-                    const desc = (item["Item Description"]||"").trim().toUpperCase();
-                    
-                    // Unique key includes Lot No. now
-                    const k = cat + "|" + lot + "|" + desc;
+                    const k = (item["Category"]||"N/A").trim().toUpperCase() + "|" + (item["Item Description"]||"").trim().toUpperCase();
                     
                     if(!globalStockMap[k]) {
                         globalStockMap[k] = { 
-                            category: (item["Category"]||""), 
-                            lotNo: (item["Lot No."]||""), 
-                            item: (item["Item Description"]||""), 
+                            category: (item["Category"]||""), item: (item["Item Description"]||""), 
                             deptIssues: {}, opKg: 0, opBal: 0, opAmt: 0, reKg: 0, reBal: 0, reAmt: 0, isKg: 0, isBal: 0, isAmt: 0 
                         };
                     }
-                    
                     const q = parseFloat(item["Qty (KG)"]||0), b = parseFloat(item["Bales"]||0), a = parseFloat(item["Total Amount"]||0);
-                    
-                    let isCurrentPeriod = false;
-                    let isPastPeriod = false;
-
-                    if (periodType === 'month') {
-                        isCurrentPeriod = (itemMonth === targetMonth);
-                        isPastPeriod = (itemMonth < targetMonth);
-                    } else {
-                        isCurrentPeriod = (itemDateStr === targetDate);
-                        isPastPeriod = (itemDateStr < targetDate);
-                    }
+                    let isCurrentPeriod = (periodType === 'month') ? (itemMonth === targetMonth) : (itemDateStr === targetDate);
+                    let isPastPeriod = (periodType === 'month') ? (itemMonth < targetMonth) : (itemDateStr < targetDate);
 
                     if(type === 'i' && item["Issuing To (Dept)"] && isCurrentPeriod) {
                         const dpt = item["Issuing To (Dept)"].trim();
@@ -280,7 +234,6 @@
                         globalStockMap[k].deptIssues[dpt].kg += q;
                         globalStockMap[k].deptIssues[dpt].bal += b;
                     }
-
                     if(isPastPeriod) { 
                         globalStockMap[k].opKg += (type==='r'?q:-q); 
                         globalStockMap[k].opBal += (type==='r'?b:-b); 
@@ -292,29 +245,23 @@
                 });
             };
             proc(recs, 'r'); proc(iss, 'i'); renderTable();
-        } catch(e) { tbody.innerHTML = "<tr><td colspan='9'>Error loading data.</td></tr>"; }
+        } catch(e) { tbody.innerHTML = "<tr><td colspan='8'>Error loading data.</td></tr>"; }
         finally { icon.classList.remove('fa-spin'); }
     }
 
     function renderTable() {
         const tbody = document.getElementById('stockTableBody');
-        const sD = document.getElementById('viewDept').checked;
-        const sK = document.getElementById('viewKg').checked, sB = document.getElementById('viewBales').checked, sA = document.getElementById('viewAmt').checked, hZ = document.getElementById('hideZero').checked;
+        const sD = document.getElementById('viewDept').checked, sK = document.getElementById('viewKg').checked, sB = document.getElementById('viewBales').checked, sA = document.getElementById('viewAmt').checked, hZ = document.getElementById('hideZero').checked;
         const filterVal = document.getElementById("stockFilter").value.toUpperCase();
-        
         document.getElementById('thDept').style.display = sD ? '' : 'none';
         tbody.innerHTML = "";
-
         let t = { ok:0, ob:0, oa:0, rk:0, rb:0, ra:0, ik:0, ib:0, ia:0, ck:0, cb:0, ca:0 };
 
         for(let k in globalStockMap) {
             let e = globalStockMap[k];
             let ck = e.opKg+e.reKg-e.isKg, cb = e.opBal+e.reBal-e.isBal, ca = e.opAmt+e.reAmt-e.isAmt;
-            
             if(hZ && ck <= 0) continue;
-            
-            // Search includes Lot No.
-            let searchString = (e.category + " " + e.lotNo + " " + e.item).toUpperCase();
+            let searchString = (e.category + " " + e.item).toUpperCase();
             if (filterVal && !searchString.includes(filterVal)) continue;
 
             t.ok+=e.opKg; t.ob+=e.opBal; t.oa+=e.opAmt;
@@ -327,84 +274,40 @@
                 (sB ? `<span class="val-bal">${prefix}${bal} Bales</span>` : "") +
                 (sA ? `<span class="val-amt">₹ ${amt.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>` : "")
             );
-            
-            let deptHtml = "";
-            if(Object.keys(e.deptIssues).length > 0) {
-                for(let d in e.deptIssues) {
-                    deptHtml += `<div class="dept-item"><span class="dept-name">${d}</span><span class="dept-stats">${sK?e.deptIssues[d].kg.toFixed(2)+' KG':''} ${sB?'| '+e.deptIssues[d].bal+' Bls':''}</span></div>`;
-                }
-            } else { deptHtml = `<span style="color:#cbd5e0; font-style:italic">No issues</span>`; }
+            let deptHtml = Object.keys(e.deptIssues).length > 0 
+                ? Object.entries(e.deptIssues).map(([d, v]) => `<div class="dept-item"><span class="dept-name">${d}</span><span class="dept-stats">${sK?v.kg.toFixed(2)+' KG':''} ${sB?'| '+v.bal+' Bls':''}</span></div>`).join("")
+                : `<span style="color:#cbd5e0; font-style:italic">No issues</span>`;
 
-            tbody.innerHTML += `
-                <tr>
-                    <td style="font-weight:bold; color:var(--primary)">${e.category}</td>
-                    <td style="color:#e67e22; font-weight:bold;">${e.lotNo}</td>
-                    <td>${e.item}</td>
-                    <td style="display: ${sD ? '' : 'none'}">${deptHtml}</td>
-                    <td>${format(e.opKg, e.opBal, e.opAmt)}</td>
-                    <td style="background: #f0fff4;">${format(e.reKg, e.reBal, e.reAmt, "+ ")}</td>
-                    <td style="background: #fff5f5;">${format(e.isKg, e.isBal, e.isAmt, "- ")}</td>
-                    <td style="font-weight:bold;">${format(ck, cb, ca)}</td>
-                    <td><span class="${ck>0?'status-ok':'status-nil'}">${ck>0?'IN STOCK':'NIL'}</span></td>
-                </tr>`;
-        }
-
-        const footerFormat = (kg, bal, amt) => (
-            (sK ? kg.toLocaleString(undefined, {minimumFractionDigits: 2}) + " KG<br>" : "") +
-            (sB ? bal.toLocaleString() + " Bales<br>" : "") +
-            (sA ? "₹ " + amt.toLocaleString(undefined, {minimumFractionDigits: 2}) : "")
-        );
-        
-        const colSpan = sD ? 4 : 3;
-        document.getElementById('stockTableFoot').innerHTML = `
-            <tr>
-                <td colspan="${colSpan}" style="color:white !important;">GRAND TOTAL:</td>
-                <td style="color:white !important;">${footerFormat(t.ok, t.ob, t.oa)}</td>
-                <td style="color:white !important;">${footerFormat(t.rk, t.rb, t.ra)}</td>
-                <td style="color:white !important;">${footerFormat(t.ik, t.ib, t.ia)}</td>
-                <td style="color:white !important;">${footerFormat(t.ck, t.cb, t.ca)}</td>
-                <td></td>
+            tbody.innerHTML += `<tr>
+                <td style="font-weight:bold; color:var(--primary)">${e.category}</td>
+                <td>${e.item}</td>
+                <td style="display: ${sD ? '' : 'none'}">${deptHtml}</td>
+                <td>${format(e.opKg, e.opBal, e.opAmt)}</td>
+                <td style="background: #f0fff4;">${format(e.reKg, e.reBal, e.reAmt, "+ ")}</td>
+                <td style="background: #fff5f5;">${format(e.isKg, e.isBal, e.isAmt, "- ")}</td>
+                <td style="font-weight:bold;">${format(ck, cb, ca)}</td>
+                <td><span class="${ck>0?'status-ok':'status-nil'}">${ck>0?'IN STOCK':'NIL'}</span></td>
             </tr>`;
+        }
+        const fF = (kg, bal, amt) => (sK ? kg.toLocaleString(undefined, {mFD:2})+" KG<br>":"")+(sB ? bal.toLocaleString()+" Bales<br>":"")+(sA ? "₹ "+amt.toLocaleString(undefined, {mFD:2}):"");
+        document.getElementById('stockTableFoot').innerHTML = `<tr><td colspan="${sD?3:2}" style="color:white !important;">GRAND TOTAL:</td><td style="color:white !important;">${fF(t.ok, t.ob, t.oa)}</td><td style="color:white !important;">${fF(t.rk, t.rb, t.ra)}</td><td style="color:white !important;">${fF(t.ik, t.ib, t.ia)}</td><td style="color:white !important;">${fF(t.ck, t.cb, t.ca)}</td><td></td></tr>`;
     }
 
     function exportProfessionalExcel() {
-        const data = [];
-        const headers = [
-            "Category", "Lot No.", "Item Description", "Dept Issues Breakdown",
-            "Opening KG", "Opening Bales", "Opening Value",
-            "Received KG", "Received Bales", "Received Value",
-            "Issued KG", "Issued Bales", "Issued Value",
-            "Closing KG", "Closing Bales", "Closing Value",
-            "Status"
-        ];
-        data.push(headers);
-
-        const filterVal = document.getElementById("stockFilter").value.toUpperCase();
-        const hZ = document.getElementById('hideZero').checked;
-
+        const data = [["Category", "Item Description", "Dept Issues", "Opening KG", "Opening Bales", "Opening Value", "Received KG", "Received Bales", "Received Value", "Issued KG", "Issued Bales", "Issued Value", "Closing KG", "Closing Bales", "Closing Value", "Status"]];
         for(let k in globalStockMap) {
             let e = globalStockMap[k];
             let ck = e.opKg+e.reKg-e.isKg, cb = e.opBal+e.reBal-e.isBal, ca = e.opAmt+e.reAmt-e.isAmt;
-            if(hZ && ck <= 0) continue;
-            let searchString = (e.category + " " + e.lotNo + " " + e.item).toUpperCase();
-            if (filterVal && !searchString.includes(filterVal)) continue;
-
-            let deptTxt = Object.keys(e.deptIssues).length > 0 
-                ? Object.entries(e.deptIssues).map(([d, v]) => `${d}: ${v.kg}KG`).join(" | ") 
-                : "No Issues";
-
-            data.push([
-                e.category, e.lotNo, e.item, deptTxt,
-                e.opKg, e.opBal, e.opAmt,
-                e.reKg, e.reBal, e.reAmt,
-                e.isKg, e.isBal, e.isAmt,
-                ck, cb, ca,
-                ck > 0 ? "IN STOCK" : "NIL"
-            ]);
+            let deptTxt = Object.keys(e.deptIssues).length > 0 ? Object.entries(e.deptIssues).map(([d, v]) => `${d}: ${v.kg}KG`).join(" | ") : "No Issues";
+            data.push([e.category, e.item, deptTxt, e.opKg, e.opBal, e.opAmt, e.reKg, e.reBal, e.reAmt, e.isKg, e.isBal, e.isAmt, ck, cb, ca, ck > 0 ? "IN STOCK" : "NIL"]);
         }
-
         const ws = XLSX.utils.aoa_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Stock Report");
-        ws['!cols'] = [{wch:15}, {wch:15}, {wch:30}, {wch:35}, {wch:12}, {wch:12}, {wch:15}, {wch:12}, {wch:12}, {wch:15}, {wch:12}, {wch:12}, {wch:15}, {wch:12}, {wch:12}, {wch:15}, {wch:10}];
-        const pType = document.getElementById('periodType').valu
+        XLSX.writeFile(wb, `NRV_Stock_Report.xlsx`);
+    }
+    function filterStockTable() { renderTable(); }
+</script>
+</body>
+</html>
+
