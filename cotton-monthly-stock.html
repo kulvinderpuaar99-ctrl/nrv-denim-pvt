@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NRV Denim - Professional Stock Report</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #1565c0;
+            --accent: #e67e22;
+            --light-bg: #f4f7f6;
+            --border: #dee2e6;
+            --footer-bg: #2c3e50;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--light-bg); }
+        nav {
+            background-color: #000000;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .nav-link { color: white; text-decoration: none; font-weight: 500; font-size: 15px; transition: 0.3s; }
+        .nav-link:hover { color: var(--accent); }
+        .report-header {
+            background: white;
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .report-title h1 { margin: 0; font-size: 24px; color: var(--primary); letter-spacing: 1px; }
+        .report-title p { margin: 5px 0 0; color: var(--secondary); font-weight: bold; font-size: 12px; text-transform: uppercase; }
+        #printMonthDisplay {
+            display: none;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 5px;
+        }
+        .container { padding: 20px 40px; max-width: 1600px; margin: 0 auto; }
+        .control-panel {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+        }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; }
+        .filter-group label { font-size: 11px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; }
+        input[type="month"], input[type="date"], input[type="text"], select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 5px; outline: none; background: white; font-family: inherit;}
+        .btn { padding: 10px 18px; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-refresh { background: #34495e; color: white; }
+        .btn-excel { background: #1d6f42; color: white; }
+        .btn-print { background: #2980b9; color: white; }
+        .toggles { display: flex; gap: 15px; align-items: center; border-left: 1px solid #ddd; padding-left: 20px; }
+        .toggles label { font-size: 12px; color: var(--primary); font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .table-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8f9fa; color: #34495e; font-weight: 600; padding: 12px 15px; text-align: left; border-bottom: 2px solid #edf2f7; font-size: 13px; }
+        td { padding: 12px 15px; border-bottom: 1px solid #edf2f7; font-size: 13px; vertical-align: top; color: #2d3748; }
+        #stockTableFoot tr { background: var(--footer-bg) !important; }
+        #stockTableFoot td { color: #ffffff !important; font-weight: bold; border: none; padding: 15px; }
+        .dept-item { background: #f1f5f9; border-left: 3px solid var(--secondary); padding: 6px 10px; margin-bottom: 5px; border-radius: 4px; }
+        .dept-name { font-weight: bold; font-size: 11px; color: #1e293b; display: block; }
+        .dept-stats { font-size: 10px; color: #e67e22; font-weight: bold; }
+        .status-ok { background: #c6f6d5; color: #22543d; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; }
+        .status-nil { background: #fed7d7; color: #822727; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; }
+        .val-kg { display: block; font-weight: 500; }
+        .val-bal { color: #718096; font-size: 11px; display: block; }
+        .val-amt { color: var(--secondary); font-weight: bold; font-size: 11px; display: block; margin-top: 2px; }
+        @media print {
+            nav, .control-panel, .btn { display: none !important; }
+            #printMonthDisplay { display: block !important; }
+            .container { padding: 0; width: 100%; }
+            .report-header { border: none; }
+        }
+    </style>
+</head>
+<body>
+<nav>
+    <a href="index.html" class="nav-link"><i class="fa fa-home"></i> Return to Home 🏠</a>
+    <span style="color: #666; font-size: 12px; font-weight: bold;">NRV Denim ERP | Professional Report</span>
+</nav>
+
+<div class="report-header">
+    <div class="report-title">
+        <h1>NRV DENIM PRIVATE LIMITED</h1>
+        <p>Material Balance & Departmental Issuance Report</p>
+        <div id="printMonthDisplay"></div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn btn-excel" onclick="exportProfessionalExcel()"><i class="fa fa-file-excel"></i> Export Pro Excel</button>
+        <button class="btn btn-print" onclick="window.print()"><i class="fa fa-print"></i> Print Report</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="control-panel">
+        <div class="filter-group">
+            <label>Period Type</label>
+            <select id="periodType" onchange="togglePeriod(); loadBalanceStock()">
+                <option value="month">By Month</option>
+                <option value="date">Specific Date</option>
+            </select>
+        </div>
+        <div class="filter-group" id="monthFilterGroup">
+            <label>Month</label>
+            <input type="month" id="reportMonth" onchange="loadBalanceStock()">
+        </div>
+        <div class="filter-group" id="dateFilterGroup" style="display: none;">
+            <label>Date</label>
+            <input type="date" id="reportDate" onchange="loadBalanceStock()">
+        </div>
+        <div class="filter-group">
+            <label>Search</label>
+            <input type="text" id="stockFilter" placeholder="Filter Category or Item..." onkeyup="filterStockTable()">
+        </div>
+        <button class="btn btn-refresh" onclick="loadBalanceStock()">
+            <i class="fa fa-sync-alt" id="refreshIcon"></i> Refresh Report
+        </button>
+        <div class="toggles">
+            <label><input type="checkbox" id="viewDept" checked onchange="updateView()"> Dept Details</label>
+            <label><input type="checkbox" id="viewKg" checked onchange="updateView()"> KG</label>
+            <label><input type="checkbox" id="viewBales" checked onchange="updateView()"> Bales</label>
+            <label><input type="checkbox" id="viewAmt" checked onchange="updateView()"> Value</label>
+            <label style="color: #e53e3e;"><input type="checkbox" id="hideZero" onchange="updateView()"> Hide Nil</label>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <table id="stockTable">
+            <thead>
+                <tr>
+                    <th style="width: 12%;">Category</th>
+                    <th style="width: 18%;">Item Description</th>
+                    <th style="width: 10%;">Lot No.</th> <th id="thDept" style="width: 20%;">Dept. Wise Issue (Qty)</th>
+                    <th>Opening Bal</th>
+                    <th>Received (+)</th>
+                    <th>Issued (-)</th>
+                    <th>Closing Bal</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="stockTableBody">
+                <tr><td colspan="9" style="text-align: center; padding: 40px;">Fetching data...</td></tr>
+            </tbody>
+            <tfoot id="stockTableFoot"></tfoot>
+        </table>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxTO3fc8hh7PBrLJI95YECv-H67eWbmzbyB7TDcgLRXGGg0ua-zzWVLMKKwe5jZS63iyw/exec';
+    let globalStockMap = {};
+
+    window.onload = () => { 
+        const today = new Date();
+        document.getElementById('reportMonth').value = today.toISOString().slice(0, 7); 
+        document.getElementById('reportDate').value = today.toISOString().split('T')[0];
+        togglePeriod();
+        loadBalanceStock();
+    };
+
+    function togglePeriod() {
+        const type = document.getElementById('periodType').value;
+        document.getElementById('monthFilterGroup').style.display = type === 'month' ? 'flex' : 'none';
+        document.getElementById('dateFilterGroup').style.display = type === 'date' ? 'flex' : 'none';
+    }
+
+    function updateView() { renderTable(); }
+
+    async function loadBalanceStock() {
+        const icon = document.getElementById('refreshIcon');
+        const tbody = document.getElementById('stockTableBody');
+        const periodType = document.getElementById('periodType').value;
+        const targetMonth = document.getElementById('reportMonth').value;
+        const targetDate = document.getElementById('reportDate').value;
+        
+        if (periodType === 'month') {
+            const dateObj = new Date(targetMonth + "-01");
+            const monthName = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+            document.getElementById('printMonthDisplay').innerText = "STOCK REPORT FOR: " + monthName.toUpperCase();
+        } else {
+            if(!targetDate) return; 
+            const dateObj = new Date(targetDate);
+            document.getElementById('printMonthDisplay').innerText = "STOCK REPORT FOR DATE: " + dateObj.toLocaleDateString();
+        }
+
+        icon.classList.add('fa-spin');
+        try {
+            const [rR, rI] = await Promise.all([
+                fetch(`${API_URL}?Department=COTTON_REC&t=${Date.now()}`), 
+                fetch(`${API_URL}?Department=COTTON_ISSUE&t=${Date.now()}`)
+            ]);
+            const recs = await rR.json(); 
+            const iss = await rI.json();
+            
+            globalStockMap = {};
+            const proc = (data, type) => {
+                data.forEach(item => {
+                    if (!item["Date"]) return;
+                    const dateVal = new Date(item["Date"]);
+                    const itemMonth = `${dateVal.getFullYear()}-${String(dateVal.getMonth() + 1).padStart(2, '0')}`;
+                    const tzOffset = (new Date()).getTimezoneOffset() * 60000;
+                    const itemDateStr = (new Date(dateVal - tzOffset)).toISOString().split('T')[0];
+                    const k = (item["Category"]||"N/A").trim().toUpperCase() + "|" + (item["Item Description"]||"").trim().toUpperCase();
+                    
+                    if(!globalStockMap[k]) {
+                        globalStockMap[k] = { 
+                            category: (item["Category"]||""), 
+                            item: (item["Item Description"]||""), 
+                            lotNo: (item["Lot No."]||"-"), // Extracted from Google Sheet API 
+                            deptIssues: {}, opKg: 0, opBal: 0, opAmt: 0, reKg: 0, reBal: 0, reAmt: 0, isKg: 0, isBal: 0, isAmt: 0 
+                        };
+                    }
+                    const q = parseFloat(item["Qty (KG)"]||0), b = parseFloat(item["Bales"] || item["Bags/Pellets"] || 0), a = parseFloat(item["Total Amount"]||0);
+                    let isCurrentPeriod = (periodType === 'month') ? (itemMonth === targetMonth) : (itemDateStr === targetDate);
+                    let isPastPeriod = (periodType === 'month') ? (itemMonth < targetMonth) : (itemDateStr < targetDate);
+
+                    if(type === 'i' && item["Issuing To (Dept)"] && isCurrentPeriod) {
+                        const dpt = item["Issuing To (Dept)"].trim();
+                        if(!globalStockMap[k].deptIssues[dpt]) globalStockMap[k].deptIssues[dpt] = { kg: 0, bal: 0 };
+                        globalStockMap[k].deptIssues[dpt].kg += q;
+                        globalStockMap[k].deptIssues[dpt].bal += b;
+                    }
+                    if(isPastPeriod) { 
+                        globalStockMap[k].opKg += (type==='r'?q:-q); 
+                        globalStockMap[k].opBal += (type==='r'?b:-b); 
+                        globalStockMap[k].opAmt += (type==='r'?a:-a); 
+                    } else if(isCurrentPeriod) { 
+                        if(type==='r'){ globalStockMap[k].reKg+=q; globalStockMap[k].reBal+=b; globalStockMap[k].reAmt+=a; } 
+                        else { globalStockMap[k].isKg+=q; globalStockMap[k].isBal+=b; globalStockMap[k].isAmt+=a; } 
+                    }
+                });
+            };
+            proc(recs, 'r'); proc(iss, 'i'); renderTable();
+        } catch(e) { tbody.innerHTML = "<tr><td colspan='9'>Error loading data.</td></tr>"; }
+        finally { icon.classList.remove('fa-spin'); }
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('stockTableBody');
+        const sD = document.getElementById('viewDept').checked, sK = document.getElementById('viewKg').checked, sB = document.getElementById('viewBales').checked, sA = document.getElementById('viewAmt').checked, hZ = document.getElementById('hideZero').checked;
+        const filterVal = document.getElementById("stockFilter").value.toUpperCase();
+        document.getElementById('thDept').style.display = sD ? '' : 'none';
+        tbody.innerHTML = "";
+        let t = { ok:0, ob:0, oa:0, rk:0, rb:0, ra:0, ik:0, ib:0, ia:0, ck:0, cb:0, ca:0 };
+
+        for(let k in globalStockMap) {
+            let e = globalStockMap[k];
+            let ck = e.opKg+e.reKg-e.isKg, cb = e.opBal+e.reBal-e.isBal, ca = e.opAmt+e.reAmt-e.isAmt;
+            if(hZ && ck <= 0) continue;
+            let searchString = (e.category + " " + e.item + " " + e.lotNo).toUpperCase();
+            if (filterVal && !searchString.includes(filterVal)) continue;
+
+            t.ok+=e.opKg; t.ob+=e.opBal; t.oa+=e.opAmt;
+            t.rk+=e.reKg; t.rb+=e.reBal; t.ra+=e.reAmt;
+            t.ik+=e.isKg; t.ib+=e.isBal; t.ia+=e.isAmt;
+            t.ck+=ck; t.cb+=cb; t.ca+=ca;
+
+            const format = (kg, bal, amt, prefix="") => (
+                (sK ? `<span class="val-kg">${prefix}${kg.toLocaleString(undefined, {minimumFractionDigits: 2})} KG</span>` : "") +
+                (sB ? `<span class="val-bal">${prefix}${bal} Bales</span>` : "") +
+                (sA ? `<span class="val-amt">₹ ${amt.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>` : "")
+            );
+            let deptHtml = Object.keys(e.deptIssues).length > 0 
+                ? Object.entries(e.deptIssues).map(([d, v]) => `<div class="dept-item"><span class="dept-name">${d}</span><span class="dept-stats">${sK?v.kg.toFixed(2)+' KG':''} ${sB?'| '+v.bal+' Bales':''}</span></div>`).join("")
+                : `<span style="color:#cbd5e0; font-style:italic">No issues</span>`;
+
+            tbody.innerHTML += `<tr>
+                <td style="font-weight:bold; color:var(--primary)">${e.category}</td>
+                <td>${e.item}</td>
+                <td>${e.lotNo}</td> <td style="display: ${sD ? '' : 'none'}">${deptHtml}</td>
+                <td>${format(e.opKg, e.opBal, e.opAmt)}</td>
+                <td style="background: #f0fff4;">${format(e.reKg, e.reBal, e.reAmt, "+ ")}</td>
+                <td style="background: #fff5f5;">${format(e.isKg, e.isBal, e.isAmt, "- ")}</td>
+                <td style="font-weight:bold;">${format(ck, cb, ca)}</td>
+                <td><span class="${ck>0?'status-ok':'status-nil'}">${ck>0?'IN STOCK':'NIL'}</span></td>
+            </tr>`;
+        }
+        const fF = (kg, bal, amt) => (sK ? kg.toLocaleString(undefined, {mFD:2})+" KG<br>":"")+(sB ? bal.toLocaleString()+" Bales<br>":"")+(sA ? "₹ "+amt.toLocaleString(undefined, {mFD:2}):"");
+        document.getElementById('stockTableFoot').innerHTML = `<tr><td colspan="${sD?4:3}" style="color:white !important;">GRAND TOTAL:</td><td style="color:white !important;">${fF(t.ok, t.ob, t.oa)}</td><td style="color:white !important;">${fF(t.rk, t.rb, t.ra)}</td><td style="color:white !important;">${fF(t.ik, t.ib, t.ia)}</td><td style="color:white !important;">${fF(t.ck, t.cb, t.ca)}</td><td></td></tr>`;
+    }
+
+    function exportProfessionalExcel() {
+        // Added "Lot No." to the Excel header
+        const data = [["Category", "Item Description", "Lot No.", "Dept Issues", "Opening KG", "Opening Bales", "Opening Value", "Received KG", "Received Bales", "Received Value", "Issued KG", "Issued Bales", "Issued Value", "Closing KG", "Closing Bales", "Closing Value", "Status"]];
+        for(let k in globalStockMap) {
+            let e = globalStockMap[k];
+            let ck = e.opKg+e.reKg-e.isKg, cb = e.opBal+e.reBal-e.isBal, ca = e.opAmt+e.reAmt-e.isAmt;
+            let deptTxt = Object.keys(e.deptIssues).length > 0 ? Object.entries(e.deptIssues).map(([d, v]) => `${d}: ${v.kg}KG`).join(" | ") : "No Issues";
+            // Pushed e.lotNo into the Excel row export
+            data.push([e.category, e.item, e.lotNo, deptTxt, e.opKg, e.opBal, e.opAmt, e.reKg, e.reBal, e.reAmt, e.isKg, e.isBal, e.isAmt, ck, cb, ca, ck > 0 ? "IN STOCK" : "NIL"]);
+        }
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Stock Report");
+        XLSX.writeFile(wb, `NRV_Stock_Report.xlsx`);
+    }
+    function filterStockTable() { renderTable(); }
+</script>
+</body>
+</html>
