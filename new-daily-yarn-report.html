@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NRV Denim - Daily Stock Report</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f4f8; color: #2c3e50; }
+        
+        .container { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); 
+            max-width: 99%; 
+            margin: 10px auto; 
+            position: relative;
+        }
+
+        .header-section { text-align: center; margin-bottom: 15px; position: relative; }
+        .company-name { margin: 0; font-size: 24px; font-weight: bold; }
+        .report-title { color: #1565c0; font-weight: bold; margin: 5px 0; letter-spacing: 2px; font-size: 14px; }
+
+        /* Professional Home Button */
+        .btn-home-nav {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #ecf0f1;
+            color: #2c3e50;
+            padding: 8px 16px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        .btn-home-nav:hover { background: #dcdde1; border-color: #7f8c8d; }
+
+        .controls {
+            display: flex; 
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-top: 25px;
+        }
+        .control-row { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px; }
+        
+        .visibility-filters {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .filter-item { font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #2c3e50; }
+
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 10px; font-weight: bold; color: #636e72; margin-bottom: 3px; text-transform: uppercase; }
+        input[type="month"] { padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; width: 160px; }
+
+        .btn-group { display: flex; gap: 8px; }
+        .action-btn { 
+            padding: 8px 16px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 12px; 
+            color: white; 
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-refresh { background: #3498db; }
+        .btn-excel { background: #27ae60; }
+        .btn-print { background: #e74c3c; }
+
+        /* Table Styling with Light Headers */
+        .table-wrapper { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; table-layout: auto; color: #000; }
+        
+        /* General header style */
+        th { background: #f2f2f2; color: #000; padding: 6px 2px; border: 1px solid #aaa; text-align: center; }
+        
+        /* Categorized Colors */
+        .head-rm-rec { background: #bbdefb !important; } /* Light Blue */
+        .head-rm-iss { background: #ffccbc !important; } /* Light Deep Orange */
+        .head-yn-prd { background: #e0f7fa !important; } /* Light Cyan */
+        .head-yn-iss { background: #fce4ec !important; } /* Light Pink */
+        
+        /* Stock Section Colors */
+        .head-rm-stk { background: #d7ccc8 !important; } /* Light Brown */
+        .head-yn-stk { background: #e8eaf6 !important; } /* Light Indigo */
+
+        td { padding: 6px 2px; border: 1px solid #ccc; text-align: center; }
+        tr:nth-child(even) { background-color: #fcfcfc; }
+        
+        .grand-total-row { background: #dfe6e9 !important; color: #000 !important; font-weight: bold; }
+        .grand-total-row td { border: 1.5px solid #000; }
+
+        .hidden { display: none !important; }
+
+        @media print {
+            @page { size: landscape; margin: 0.4cm; }
+            body { background: white; margin: 0; padding: 0; color: #000 !important; }
+            .container { box-shadow: none; border: none; width: 100%; max-width: 100%; margin: 0; padding: 0; }
+            .controls, .btn-group, .visibility-filters, .no-print, .btn-home-nav { display: none !important; }
+            
+            table { width: 100% !important; font-size: 9pt !important; border-collapse: collapse !important; }
+            th { color: #000 !important; font-weight: bold !important; border: 1pt solid #000 !important; -webkit-print-color-adjust: exact !important; }
+            td { color: #000 !important; font-weight: 600 !important; border: 1pt solid #000 !important; padding: 4px 2px !important; }
+        }
+    </style>
+</head>
+<body onload="initReport()">
+
+<div class="container">
+    <a href="index.html" class="btn-home-nav no-print">🏠 Return Home</a>
+    
+    <div class="header-section">
+        <h1 class="company-name">NRV DENIM PRIVATE LIMITED</h1>
+        <p class="report-title">DAILY U-3 PRODUCTION SUMMARY REPORT</p>
+    </div>
+
+    <div class="controls no-print">
+        <div class="control-row">
+            <div class="form-group">
+                <label>Reporting Month</label>
+                <input type="month" id="reportMonth" onchange="loadReport()">
+            </div>
+            <div class="btn-group">
+                <button class="action-btn btn-refresh" onclick="loadReport()">🔄 Refresh</button>
+                <button class="action-btn btn-excel" onclick="exportToExcel()">📊 Excel</button>
+                <button class="action-btn btn-print" onclick="window.print()">🖨️Print</button>
+            </div>
+        </div>
+
+        <div class="visibility-filters">
+            <b style="font-size: 13px; margin-right: 10px; color: #d63031;">Group Filters:</b>
+            <label class="filter-item">
+                <input type="checkbox" checked onchange="toggleGroup(this, ['grp-rm-rec', 'grp-rm-iss', 'grp-rm-stk'])"> Raw Material
+            </label>
+            <label class="filter-item">
+                <input type="checkbox" checked onchange="toggleGroup(this, ['grp-yn-prd', 'grp-yn-iss', 'grp-yn-stk'])"> U-3 Yarn & Waste
+            </label>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="mainReportTable">
+            <thead>
+                <tr>
+                    <th rowspan="2">Date</th>
+                    <th colspan="4" class="grp-rm-rec head-rm-rec">Raw Material Receipt</th>
+                    <th colspan="4" class="grp-rm-iss head-rm-iss">Issue Raw Material</th>
+                    
+                    <th colspan="5" class="grp-yn-prd head-yn-prd">U-3 Yarn & Waste Report</th>
+                    <th colspan="3" class="grp-yn-iss head-yn-iss">Yarn & Waste Issue Or Sale Report</th>
+
+                    <th colspan="4" class="grp-rm-stk head-rm-stk">Raw Material Stock (Total)</th>
+                    <th colspan="3" class="grp-yn-stk head-yn-stk">Stock Yarn & Waste (Total)</th>
+                </tr>
+                <tr>
+                    <th class="grp-rm-rec head-rm-rec">Cotton</th><th class="grp-rm-rec head-rm-rec">Flat</th><th class="grp-rm-rec head-rm-rec">Recycled Fiber</th><th class="grp-rm-rec head-rm-rec">Total</th>
+                    <th class="grp-rm-iss head-rm-iss">Cotton</th><th class="grp-rm-iss head-rm-iss">Flat</th><th class="grp-rm-iss head-rm-iss">Recycled Fiber</th><th class="grp-rm-iss head-rm-iss">Total</th>
+                    
+                    <th class="grp-yn-prd head-yn-prd">OE Plant Yarn</th><th class="grp-yn-prd head-yn-prd">OE Plant Waste</th><th class="grp-yn-prd head-yn-prd">OE Dust</th><th class="grp-yn-prd head-yn-prd">Recovery %</th><th class="grp-yn-prd head-yn-prd">WIP</th>
+                    <th class="grp-yn-iss head-yn-iss">OE Plant Yarn</th><th class="grp-yn-iss head-yn-iss">OE Plant Waste</th><th class="grp-yn-iss head-yn-iss">OE Dust</th>
+
+                    <th class="grp-rm-stk head-rm-stk">Cotton</th><th class="grp-rm-stk head-rm-stk">Flat</th><th class="grp-rm-stk head-rm-stk">Recycled Fiber</th><th class="grp-rm-stk head-rm-stk">Total</th>
+                    <th class="grp-yn-stk head-yn-stk">OE Plant Yarn</th><th class="grp-yn-stk head-yn-stk">OE Plant Waste</th><th class="grp-yn-stk head-yn-stk">OE Dust</th>
+                </tr>
+            </thead>
+            <tbody id="reportDataBody"></tbody>
+            <tfoot id="reportFooter"></tfoot>
+        </table>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxTO3fc8hh7PBrLJI95YECv-H67eWbmzbyB7TDcgLRXGGg0ua-zzWVLMKKwe5jZS63iyw/exec';
+
+    function toggleGroup(checkbox, classNamesArray) {
+        classNamesArray.forEach(className => {
+            const cols = document.getElementsByClassName(className);
+            for(let col of cols) {
+                if (checkbox.checked) col.classList.remove('hidden');
+                else col.classList.add('hidden');
+            }
+        });
+    }
+
+    function initReport() {
+        const today = new Date().toISOString().slice(0, 7);
+        document.getElementById('reportMonth').value = today;
+        loadReport();
+    }
+
+    async function loadReport() {
+        const tbody = document.getElementById('reportDataBody');
+        const tfoot = document.getElementById('reportFooter');
+        const selectedMonth = document.getElementById('reportMonth').value;
+        if(!selectedMonth) return;
+        
+        tbody.innerHTML = "<tr><td colspan='24'>Syncing with server...</td></tr>";
+
+        try {
+            const [respRec, respIss, respCotRec, respCotIss, respYarnRec, respYarnIss] = await Promise.all([
+                fetch(`${API_URL}?Department=RAW_MATERIAL_REC&t=${Date.now()}`),
+                fetch(`${API_URL}?Department=RAW_MATERIAL_ISSUE&t=${Date.now()}`),
+                fetch(`${API_URL}?Department=COTTON_REC&t=${Date.now()}`),
+                fetch(`${API_URL}?Department=COTTON_ISSUE&t=${Date.now()}`),
+                fetch(`${API_URL}?Department=YARN_REC&t=${Date.now()}`),
+                fetch(`${API_URL}?Department=YARN_ISSUE&t=${Date.now()}`)
+            ]);
+            
+            const rawRec = await respRec.json();
+            const rawIss = await respIss.json();
+            const cotRec = await respCotRec.json();
+            const cotIss = await respCotIss.json();
+            const yarnRec = await respYarnRec.json();
+            const yarnIss = await respYarnIss.json();
+
+            let dailyData = {};
+            const ensureDate = (d) => {
+                if(!dailyData[d]) dailyData[d] = { 
+                    rm_cot_rec:0, rm_flat_rec:0, rm_rf_rec:0,
+                    rm_cot_iss:0, rm_flat_iss:0, rm_rf_iss:0,
+                    yn_prd_yarn:0, yn_prd_wst:0, yn_prd_dst:0,
+                    yn_iss_yarn:0, yn_iss_wst:0, yn_iss_dst:0
+                };
+            };
+
+            // Process Cotton Receipts (Cotton & Flat)
+            cotRec.forEach(r => {
+                if(!r["Date"]) return;
+                const d = r["Date"].split('T')[0];
+                ensureDate(d);
+                const qty = parseFloat(r["Qty (KG)"] || 0);
+                const cat = (r["Category"] || "").trim().toUpperCase();
+                
+                if(cat === "COTTON") dailyData[d].rm_cot_rec += qty;
+                else if(cat === "COTTON WASTE") dailyData[d].rm_flat_rec += qty;
+            });
+
+            // Process Cotton Issues (Cotton & Flat)
+            cotIss.forEach(i => {
+                if(!i["Date"]) return;
+                const d = i["Date"].split('T')[0];
+                ensureDate(d);
+                const qty = parseFloat(i["Qty (KG)"] || 0);
+                const cat = (i["Category"] || "").trim().toUpperCase();
+                
+                if(cat === "COTTON") dailyData[d].rm_cot_iss += qty;
+                else if(cat === "COTTON WASTE") dailyData[d].rm_flat_iss += qty;
+            });
+
+            // Process Yarn & Waste Receipts (U-3 Report)
+            yarnRec.forEach(r => {
+                if(!r["Date"]) return;
+                const d = r["Date"].split('T')[0];
+                ensureDate(d);
+                const qty = parseFloat(r["Qty (KG)"] || 0);
+                const cat = (r["Category"] || "").trim().toUpperCase(); 
+                
+                // Only add to yn_prd_yarn if Category is exactly OE U-3 Yarn
+                if(cat === "OE U-3 YARN") dailyData[d].yn_prd_yarn += qty;
+                else if(cat.includes("WASTE") || cat.includes("FLAT")) dailyData[d].yn_prd_wst += qty;
+                else if(cat.includes("DUST")) dailyData[d].yn_prd_dst += qty;
+            });
+
+            // Process Yarn & Waste Issues
+            yarnIss.forEach(i => {
+                if(!i["Date"]) return;
+                const d = i["Date"].split('T')[0];
+                ensureDate(d);
+                const qty = parseFloat(i["Qty (KG)"] || 0);
+                const cat = (i["Category"] || "").trim().toUpperCase(); 
+                
+                if(cat.includes("YARN")) dailyData[d].yn_iss_yarn += qty;
+                else if(cat.includes("WASTE") || cat.includes("FLAT")) dailyData[d].yn_iss_wst += qty;
+                else if(cat.includes("DUST")) dailyData[d].yn_iss_dst += qty;
+            });
+
+            // Process Raw Material Receipts (Recycled Fiber only)
+            rawRec.forEach(r => {
+                if(!r["Date"]) return;
+                const d = r["Date"].split('T')[0];
+                ensureDate(d);
+                const qty = parseFloat(r["Qty (KG)"] || 0);
+                const item = (r["Item Description"] || "").trim().toUpperCase();
+                
+                if(item === "RECYCLED FIBER") dailyData[d].rm_rf_rec += qty;
+            });
+
+            // Process Raw Material Issues (Recycled Fiber only for OE Plant Unit no 3)
+            rawIss.forEach(i => {
+                if(!i["Date"]) return;
+                const d = i["Date"].split('T')[0];
+                ensureDate(d);
+                const qty = parseFloat(i["Qty (KG)"] || 0);
+                const item = (i["Item Description"] || "").trim().toUpperCase();
+                const issuingTo = (i["Issuing To (Dept)"] || "").trim();
+                
+                // Only add to rm_rf_iss if Item is Recycled Fiber AND Issued to OE Plant Unit no 3
+                if(item === "RECYCLED FIBER" && issuingTo === "OE Plant Unit no 3") {
+                    dailyData[d].rm_rf_iss += qty;
+                }
+            });
+
+            tbody.innerHTML = "";
+            let runCot = 0, runFlat = 0, runRmRf = 0;
+            let runYarn = 0, runYarnWst = 0, runYarnDst = 0;
+            
+            let sum = { 
+                rmCR:0, rmFR:0, rmRR:0, rmCI:0, rmFI:0, rmRI:0,
+                ynPY:0, ynPW:0, ynPD:0, ynIY:0, ynIW:0, ynID:0
+            };
+
+            const allDates = Object.keys(dailyData).sort();
+            allDates.forEach(date => {
+                const day = dailyData[date];
+                
+                // Accumulating Stocks
+                runCot += (day.rm_cot_rec - day.rm_cot_iss);
+                runFlat += (day.rm_flat_rec - day.rm_flat_iss);
+                runRmRf += (day.rm_rf_rec - day.rm_rf_iss);
+                
+                runYarn += (day.yn_prd_yarn - day.yn_iss_yarn);
+                runYarnWst += (day.yn_prd_wst - day.yn_iss_wst);
+                runYarnDst += (day.yn_prd_dst - day.yn_iss_dst);
+
+                if(date.startsWith(selectedMonth)) {
+                    // Summing for current month
+                    sum.rmCR += day.rm_cot_rec; sum.rmFR += day.rm_flat_rec; sum.rmRR += day.rm_rf_rec;
+                    sum.rmCI += day.rm_cot_iss; sum.rmFI += day.rm_flat_iss; sum.rmRI += day.rm_rf_iss;
+                    
+                    sum.ynPY += day.yn_prd_yarn; sum.ynPW += day.yn_prd_wst; sum.ynPD += day.yn_prd_dst;
+                    sum.ynIY += day.yn_iss_yarn; sum.ynIW += day.yn_iss_wst; sum.ynID += day.yn_iss_dst;
+
+                    let rmRecTotal = day.rm_cot_rec + day.rm_flat_rec + day.rm_rf_rec;
+                    let rmIssTotal = day.rm_cot_iss + day.rm_flat_iss + day.rm_rf_iss;
+                    let rmStkTotal = runCot + runFlat + runRmRf;
+
+                    // U-3 Yarn Calculations based on Issue Raw Material
+                    let ynRecPercent = rmIssTotal > 0 ? (((day.yn_prd_yarn + day.yn_prd_wst + day.yn_prd_dst) / rmIssTotal) * 100) : 0;
+                    let ynWip = rmIssTotal > 0 ? (rmIssTotal * (100 - (ynRecPercent + 1.5)) / 100) : 0;
+
+                    tbody.innerHTML += `<tr>
+                        <td>${date}</td>
+                        <td class="grp-rm-rec">${day.rm_cot_rec.toFixed(0)}</td><td class="grp-rm-rec">${day.rm_flat_rec.toFixed(0)}</td><td class="grp-rm-rec">${day.rm_rf_rec.toFixed(0)}</td><td class="grp-rm-rec"><b>${rmRecTotal.toFixed(0)}</b></td>
+                        <td class="grp-rm-iss">${day.rm_cot_iss.toFixed(0)}</td><td class="grp-rm-iss">${day.rm_flat_iss.toFixed(0)}</td><td class="grp-rm-iss">${day.rm_rf_iss.toFixed(0)}</td><td class="grp-rm-iss"><b>${rmIssTotal.toFixed(0)}</b></td>
+                        
+                        <td class="grp-yn-prd">${day.yn_prd_yarn.toFixed(0)}</td><td class="grp-yn-prd">${day.yn_prd_wst.toFixed(0)}</td><td class="grp-yn-prd">${day.yn_prd_dst.toFixed(0)}</td><td class="grp-yn-prd">${ynRecPercent.toFixed(2)}%</td><td class="grp-yn-prd"><b>${ynWip.toFixed(0)}</b></td>
+                        <td class="grp-yn-iss">${day.yn_iss_yarn.toFixed(0)}</td><td class="grp-yn-iss">${day.yn_iss_wst.toFixed(0)}</td><td class="grp-yn-iss">${day.yn_iss_dst.toFixed(0)}</td>
+
+                        <td class="grp-rm-stk">${runCot.toFixed(0)}</td><td class="grp-rm-stk">${runFlat.toFixed(0)}</td><td class="grp-rm-stk">${runRmRf.toFixed(0)}</td><td class="grp-rm-stk"><b>${rmStkTotal.toFixed(0)}</b></td>
+                        <td class="grp-yn-stk">${runYarn.toFixed(0)}</td><td class="grp-yn-stk">${runYarnWst.toFixed(0)}</td><td class="grp-yn-stk">${runYarnDst.toFixed(0)}</td>
+                    </tr>`;
+                }
+            });
+            
+            if(allDates.some(d => d.startsWith(selectedMonth))) {
+                let sumRmRecTot = sum.rmCR + sum.rmFR + sum.rmRR;
+                let sumRmIssTot = sum.rmCI + sum.rmFI + sum.rmRI;
+
+                let sumYnRecPercent = sumRmIssTot > 0 ? (((sum.ynPY + sum.ynPW + sum.ynPD) / sumRmIssTot) * 100) : 0;
+                let sumYnWip = sumRmIssTot > 0 ? (sumRmIssTot * (100 - (sumYnRecPercent + 1.5)) / 100) : 0;
+
+                tfoot.innerHTML = `<tr class="grand-total-row">
+                    <td>TOTAL</td>
+                    <td class="grp-rm-rec">${sum.rmCR.toFixed(0)}</td><td class="grp-rm-rec">${sum.rmFR.toFixed(0)}</td><td class="grp-rm-rec">${sum.rmRR.toFixed(0)}</td><td class="grp-rm-rec">${sumRmRecTot.toFixed(0)}</td>
+                    <td class="grp-rm-iss">${sum.rmCI.toFixed(0)}</td><td class="grp-rm-iss">${sum.rmFI.toFixed(0)}</td><td class="grp-rm-iss">${sum.rmRI.toFixed(0)}</td><td class="grp-rm-iss">${sumRmIssTot.toFixed(0)}</td>
+                    
+                    <td class="grp-yn-prd">${sum.ynPY.toFixed(0)}</td><td class="grp-yn-prd">${sum.ynPW.toFixed(0)}</td><td class="grp-yn-prd">${sum.ynPD.toFixed(0)}</td><td class="grp-yn-prd">${sumYnRecPercent.toFixed(2)}%</td><td class="grp-yn-prd"><b>${sumYnWip.toFixed(0)}</b></td>
+                    <td class="grp-yn-iss">${sum.ynIY.toFixed(0)}</td><td class="grp-yn-iss">${sum.ynIW.toFixed(0)}</td><td class="grp-yn-iss">${sum.ynID.toFixed(0)}</td>
+
+                    <td colspan="7" style="background:#f2f2f2; text-align:center;">STOCK EXCLUDED FROM TOTAL</td>
+                </tr>`;
+            }
+        } catch(e) { tbody.innerHTML = "<tr><td colspan='24' style='color:red;'>Error loading data.</td></tr>"; }
+    }
+
+    function exportToExcel() {
+        XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById("mainReportTable")), `Daily_Summary_${document.getElementById('reportMonth').value}.xlsx`);
+    }
+</script>
+</body>
+</html>
