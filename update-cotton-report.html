@@ -255,13 +255,20 @@
                     const itemMonth = `${dateVal.getFullYear()}-${String(dateVal.getMonth() + 1).padStart(2, '0')}`;
                     const tzOffset = (new Date()).getTimezoneOffset() * 60000;
                     const itemDateStr = (new Date(dateVal - tzOffset)).toISOString().split('T')[0];
-                    const k = (item["Category"]||"N/A").trim().toUpperCase() + "|" + (item["Item Description"]||"").trim().toUpperCase();
+                    
+                    // NEW: Ensure lot number is stringified and cleaned for the grouping key
+                    const lotValue = (item["Lot No."] !== undefined && item["Lot No."] !== null && item["Lot No."] !== "") ? String(item["Lot No."]).trim() : "-";
+                    
+                    // NEW: Create grouping key based on Category + Item + Lot No.
+                    const k = (item["Category"]||"N/A").trim().toUpperCase() + "|" + 
+                              (item["Item Description"]||"").trim().toUpperCase() + "|" + 
+                              lotValue.toUpperCase();
                     
                     if(!globalStockMap[k]) {
                         globalStockMap[k] = { 
                             category: (item["Category"]||""), 
                             item: (item["Item Description"]||""), 
-                            lotNo: (item["Lot No."]||"-"), // Extracted from Google Sheet API 
+                            lotNo: lotValue, 
                             deptIssues: {}, opKg: 0, opBal: 0, opAmt: 0, reKg: 0, reBal: 0, reAmt: 0, isKg: 0, isBal: 0, isAmt: 0 
                         };
                     }
@@ -331,7 +338,8 @@
                 for(let d in e.deptIssues) {
                     const safeDatesData = encodeURIComponent(JSON.stringify(e.deptIssues[d].dates));
                     const safeDeptName = encodeURIComponent(d);
-                    const safeItemName = encodeURIComponent(e.item);
+                    // NEW: Appending lot no to modal title string to differentiate items
+                    const safeItemName = encodeURIComponent(e.item + " [Lot: " + e.lotNo + "]");
 
                     deptHtml += `<div class="dept-item clickable-dept" onclick="openDateModal('${safeDeptName}', '${safeItemName}', '${safeDatesData}')">
                         <span class="dept-name" title="Click for Date Breakdown">${d} <i class="fa fa-hand-pointer" style="color: #94a3b8; font-size: 10px; margin-left: 3px;"></i></span>
