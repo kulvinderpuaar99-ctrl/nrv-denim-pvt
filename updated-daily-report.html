@@ -303,7 +303,7 @@
             if(allDates.some(d => d.startsWith(selectedMonth))) {
                 let sumIssueTotal = sum.miM + sum.miP;
                 let sumRecPercent = sumIssueTotal > 0 ? (((sum.pF + sum.pG + sum.pMD) / sumIssueTotal) * 100) : 0;
-                let sumWip = sumIssueTotal > 0 ? (sumIssueTotal * (100 - (sumRecPercent + 2)) / 100) : 0;
+                let sumWip = sumIssueTotal > 0 ? (sumIssueTotal * (100 - (sumRecPercent + 2.5)) / 100) : 0;
 
                 tfoot.innerHTML = `<tr class="grand-total-row">
                     <td>TOTAL</td>
