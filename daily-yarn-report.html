@@ -93,13 +93,11 @@
         th { background: #f2f2f2; color: #000; padding: 6px 2px; border: 1px solid #aaa; text-align: center; }
         
         /* Categorized Colors */
-        .head-rm-rec { background: #bbdefb !important; } /* Light Blue */
         .head-rm-iss { background: #ffccbc !important; } /* Light Deep Orange */
         .head-yn-prd { background: #e0f7fa !important; } /* Light Cyan */
         .head-yn-iss { background: #fce4ec !important; } /* Light Pink */
         
         /* Stock Section Colors */
-        .head-rm-stk { background: #d7ccc8 !important; } /* Light Brown */
         .head-yn-stk { background: #e8eaf6 !important; } /* Light Indigo */
 
         td { padding: 6px 2px; border: 1px solid #ccc; text-align: center; }
@@ -125,7 +123,7 @@
 <body onload="initReport()">
 
 <div class="container">
-    <a href="index.html" class="btn-home-nav no-print">🏠 Return Home</a>
+    <a href="index.html" class="btn-home-nav no-print">匠 Return Home</a>
     
     <div class="header-section">
         <h1 class="company-name">NRV DENIM PRIVATE LIMITED</h1>
@@ -139,16 +137,16 @@
                 <input type="month" id="reportMonth" onchange="loadReport()">
             </div>
             <div class="btn-group">
-                <button class="action-btn btn-refresh" onclick="loadReport()">🔄 Refresh</button>
-                <button class="action-btn btn-excel" onclick="exportToExcel()">📊 Excel</button>
-                <button class="action-btn btn-print" onclick="window.print()">🖨️Print</button>
+                <button class="action-btn btn-refresh" onclick="loadReport()">売 Refresh</button>
+                <button class="action-btn btn-excel" onclick="exportToExcel()">投 Excel</button>
+                <button class="action-btn btn-print" onclick="window.print()">蜜ｸ襲rint</button>
             </div>
         </div>
 
         <div class="visibility-filters">
             <b style="font-size: 13px; margin-right: 10px; color: #d63031;">Group Filters:</b>
             <label class="filter-item">
-                <input type="checkbox" checked onchange="toggleGroup(this, ['grp-rm-rec', 'grp-rm-iss', 'grp-rm-stk'])"> Raw Material
+                <input type="checkbox" checked onchange="toggleGroup(this, ['grp-rm-iss'])"> Raw Material Issue
             </label>
             <label class="filter-item">
                 <input type="checkbox" checked onchange="toggleGroup(this, ['grp-yn-prd', 'grp-yn-iss', 'grp-yn-stk'])"> U-3 Yarn & Waste
@@ -161,23 +159,19 @@
             <thead>
                 <tr>
                     <th rowspan="2">Date</th>
-                    <th colspan="4" class="grp-rm-rec head-rm-rec">Raw Material Receipt</th>
                     <th colspan="4" class="grp-rm-iss head-rm-iss">Issue Raw Material</th>
                     
                     <th colspan="5" class="grp-yn-prd head-yn-prd">U-3 Yarn & Waste Report</th>
                     <th colspan="3" class="grp-yn-iss head-yn-iss">Yarn & Waste Issue Or Sale Report</th>
 
-                    <th colspan="4" class="grp-rm-stk head-rm-stk">Raw Material Stock (Total)</th>
                     <th colspan="3" class="grp-yn-stk head-yn-stk">Stock Yarn & Waste (Total)</th>
                 </tr>
                 <tr>
-                    <th class="grp-rm-rec head-rm-rec">Cotton</th><th class="grp-rm-rec head-rm-rec">Flat</th><th class="grp-rm-rec head-rm-rec">Recycled Fiber</th><th class="grp-rm-rec head-rm-rec">Total</th>
                     <th class="grp-rm-iss head-rm-iss">Cotton</th><th class="grp-rm-iss head-rm-iss">Flat</th><th class="grp-rm-iss head-rm-iss">Recycled Fiber</th><th class="grp-rm-iss head-rm-iss">Total</th>
                     
                     <th class="grp-yn-prd head-yn-prd">OE Plant Yarn</th><th class="grp-yn-prd head-yn-prd">OE Plant Waste</th><th class="grp-yn-prd head-yn-prd">OE Dust</th><th class="grp-yn-prd head-yn-prd">Recovery %</th><th class="grp-yn-prd head-yn-prd">WIP</th>
                     <th class="grp-yn-iss head-yn-iss">OE Plant Yarn</th><th class="grp-yn-iss head-yn-iss">OE Plant Waste</th><th class="grp-yn-iss head-yn-iss">OE Dust</th>
 
-                    <th class="grp-rm-stk head-rm-stk">Cotton</th><th class="grp-rm-stk head-rm-stk">Flat</th><th class="grp-rm-stk head-rm-stk">Recycled Fiber</th><th class="grp-rm-stk head-rm-stk">Total</th>
                     <th class="grp-yn-stk head-yn-stk">OE Plant Yarn</th><th class="grp-yn-stk head-yn-stk">OE Plant Waste</th><th class="grp-yn-stk head-yn-stk">OE Dust</th>
                 </tr>
             </thead>
@@ -212,7 +206,7 @@
         const selectedMonth = document.getElementById('reportMonth').value;
         if(!selectedMonth) return;
         
-        tbody.innerHTML = "<tr><td colspan='24'>Syncing with server...</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='16'>Syncing with server...</td></tr>";
 
         try {
             const [respRec, respIss, respCotRec, respCotIss, respYarnRec, respYarnIss] = await Promise.all([
@@ -348,9 +342,7 @@
                     sum.ynPY += day.yn_prd_yarn; sum.ynPW += day.yn_prd_wst; sum.ynPD += day.yn_prd_dst;
                     sum.ynIY += day.yn_iss_yarn; sum.ynIW += day.yn_iss_wst; sum.ynID += day.yn_iss_dst;
 
-                    let rmRecTotal = day.rm_cot_rec + day.rm_flat_rec + day.rm_rf_rec;
                     let rmIssTotal = day.rm_cot_iss + day.rm_flat_iss + day.rm_rf_iss;
-                    let rmStkTotal = runCot + runFlat + runRmRf;
 
                     // U-3 Yarn Calculations based on Issue Raw Material
                     let ynRecPercent = rmIssTotal > 0 ? (((day.yn_prd_yarn + day.yn_prd_wst + day.yn_prd_dst) / rmIssTotal) * 100) : 0;
@@ -358,20 +350,17 @@
 
                     tbody.innerHTML += `<tr>
                         <td>${date}</td>
-                        <td class="grp-rm-rec">${day.rm_cot_rec.toFixed(0)}</td><td class="grp-rm-rec">${day.rm_flat_rec.toFixed(0)}</td><td class="grp-rm-rec">${day.rm_rf_rec.toFixed(0)}</td><td class="grp-rm-rec"><b>${rmRecTotal.toFixed(0)}</b></td>
                         <td class="grp-rm-iss">${day.rm_cot_iss.toFixed(0)}</td><td class="grp-rm-iss">${day.rm_flat_iss.toFixed(0)}</td><td class="grp-rm-iss">${day.rm_rf_iss.toFixed(0)}</td><td class="grp-rm-iss"><b>${rmIssTotal.toFixed(0)}</b></td>
                         
                         <td class="grp-yn-prd">${day.yn_prd_yarn.toFixed(0)}</td><td class="grp-yn-prd">${day.yn_prd_wst.toFixed(0)}</td><td class="grp-yn-prd">${day.yn_prd_dst.toFixed(0)}</td><td class="grp-yn-prd">${ynRecPercent.toFixed(2)}%</td><td class="grp-yn-prd"><b>${ynWip.toFixed(0)}</b></td>
                         <td class="grp-yn-iss">${day.yn_iss_yarn.toFixed(0)}</td><td class="grp-yn-iss">${day.yn_iss_wst.toFixed(0)}</td><td class="grp-yn-iss">${day.yn_iss_dst.toFixed(0)}</td>
 
-                        <td class="grp-rm-stk">${runCot.toFixed(0)}</td><td class="grp-rm-stk">${runFlat.toFixed(0)}</td><td class="grp-rm-stk">${runRmRf.toFixed(0)}</td><td class="grp-rm-stk"><b>${rmStkTotal.toFixed(0)}</b></td>
                         <td class="grp-yn-stk">${runYarn.toFixed(0)}</td><td class="grp-yn-stk">${runYarnWst.toFixed(0)}</td><td class="grp-yn-stk">${runYarnDst.toFixed(0)}</td>
                     </tr>`;
                 }
             });
             
             if(allDates.some(d => d.startsWith(selectedMonth))) {
-                let sumRmRecTot = sum.rmCR + sum.rmFR + sum.rmRR;
                 let sumRmIssTot = sum.rmCI + sum.rmFI + sum.rmRI;
 
                 let sumYnRecPercent = sumRmIssTot > 0 ? (((sum.ynPY + sum.ynPW + sum.ynPD) / sumRmIssTot) * 100) : 0;
@@ -379,16 +368,15 @@
 
                 tfoot.innerHTML = `<tr class="grand-total-row">
                     <td>TOTAL</td>
-                    <td class="grp-rm-rec">${sum.rmCR.toFixed(0)}</td><td class="grp-rm-rec">${sum.rmFR.toFixed(0)}</td><td class="grp-rm-rec">${sum.rmRR.toFixed(0)}</td><td class="grp-rm-rec">${sumRmRecTot.toFixed(0)}</td>
                     <td class="grp-rm-iss">${sum.rmCI.toFixed(0)}</td><td class="grp-rm-iss">${sum.rmFI.toFixed(0)}</td><td class="grp-rm-iss">${sum.rmRI.toFixed(0)}</td><td class="grp-rm-iss">${sumRmIssTot.toFixed(0)}</td>
                     
                     <td class="grp-yn-prd">${sum.ynPY.toFixed(0)}</td><td class="grp-yn-prd">${sum.ynPW.toFixed(0)}</td><td class="grp-yn-prd">${sum.ynPD.toFixed(0)}</td><td class="grp-yn-prd">${sumYnRecPercent.toFixed(2)}%</td><td class="grp-yn-prd"><b>${sumYnWip.toFixed(0)}</b></td>
                     <td class="grp-yn-iss">${sum.ynIY.toFixed(0)}</td><td class="grp-yn-iss">${sum.ynIW.toFixed(0)}</td><td class="grp-yn-iss">${sum.ynID.toFixed(0)}</td>
 
-                    <td colspan="7" style="background:#f2f2f2; text-align:center;">STOCK EXCLUDED FROM TOTAL</td>
+                    <td colspan="3" style="background:#f2f2f2; text-align:center;">STOCK EXCLUDED FROM TOTAL</td>
                 </tr>`;
             }
-        } catch(e) { tbody.innerHTML = "<tr><td colspan='24' style='color:red;'>Error loading data.</td></tr>"; }
+        } catch(e) { tbody.innerHTML = "<tr><td colspan='16' style='color:red;'>Error loading data.</td></tr>"; }
     }
 
     function exportToExcel() {
