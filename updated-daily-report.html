@@ -284,7 +284,7 @@
 
                     let issueTotal = day.mi_mkt + day.mi_plt;
                     let recPercent = issueTotal > 0 ? (((day.prd_fib + day.prd_gut + day.prd_md) / issueTotal) * 100) : 0;
-                    let wip = issueTotal > 0 ? (issueTotal * (100 - (recPercent + 2)) / 100) : 0;
+                    let wip = issueTotal > 0 ? (issueTotal * (100 - (recPercent + 2.5)) / 100) : 0;
 
                     tbody.innerHTML += `<tr>
                         <td>${date}</td>
