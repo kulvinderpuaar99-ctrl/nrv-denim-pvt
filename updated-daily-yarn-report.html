@@ -324,15 +324,48 @@
             let runCot = 0, runFlat = 0, runRmRf = 0;
             let runYarn = 0, runYarnWst = 0, runYarnDst = 0;
             
+            // Trackers for previous history to calculate Opening WIP correctly
+            let prev_rm_iss = 0, prev_yn_prd = 0, prev_yn_wst = 0, prev_yn_dst = 0;
+            let openYnWip = 0;
+
             let sum = { 
                 rmCR:0, rmFR:0, rmRR:0, rmCI:0, rmFI:0, rmRI:0,
                 ynPY:0, ynPW:0, ynPD:0, ynIY:0, ynIW:0, ynID:0
             };
 
+            let hasPrintedOpening = false;
             const allDates = Object.keys(dailyData).sort();
+
             allDates.forEach(date => {
                 const day = dailyData[date];
                 
+                // Capture all data PRIOR to the selected month for opening WIP calc
+                if (date < selectedMonth + "-01") {
+                    prev_rm_iss += (day.rm_cot_iss + day.rm_flat_iss + day.rm_rf_iss);
+                    prev_yn_prd += day.yn_prd_yarn;
+                    prev_yn_wst += day.yn_prd_wst;
+                    prev_yn_dst += day.yn_prd_dst;
+                }
+
+                // Insert Opening Balance Row before processing the first date of the selected month
+                if (date >= selectedMonth + "-01" && !hasPrintedOpening) {
+                    
+                    // Calculate WIP from the previous cumulative sum just as it works for the total row
+                    let openYnRecPercent = prev_rm_iss > 0 ? (((prev_yn_prd + prev_yn_wst + prev_yn_dst) / prev_rm_iss) * 100) : 0;
+                    openYnWip = prev_rm_iss > 0 ? (prev_rm_iss * (100 - (openYnRecPercent + 1.5)) / 100) : 0;
+
+                    tbody.innerHTML += `<tr style="background-color: #fff9c4; font-weight: bold; color: #000;">
+                        <td>Opening</td>
+                        <td class="grp-rm-iss">-</td><td class="grp-rm-iss">-</td><td class="grp-rm-iss">-</td><td class="grp-rm-iss">-</td>
+                        
+                        <td class="grp-yn-prd">-</td><td class="grp-yn-prd">-</td><td class="grp-yn-prd">-</td><td class="grp-yn-prd">-</td><td class="grp-yn-prd"><b>${openYnWip.toFixed(0)}</b></td>
+                        <td class="grp-yn-iss">-</td><td class="grp-yn-iss">-</td><td class="grp-yn-iss">-</td>
+
+                        <td class="grp-yn-stk">${runYarn.toFixed(0)}</td><td class="grp-yn-stk">${runYarnWst.toFixed(0)}</td><td class="grp-yn-stk">${runYarnDst.toFixed(0)}</td>
+                    </tr>`;
+                    hasPrintedOpening = true;
+                }
+
                 // Accumulating Stocks
                 runCot += (day.rm_cot_rec - day.rm_cot_iss);
                 runFlat += (day.rm_flat_rec - day.rm_flat_iss);
@@ -368,17 +401,35 @@
                 }
             });
             
+            // Safety check: Ensure opening prints even if the selected month has absolutely no daily records yet
+            if (!hasPrintedOpening) {
+                let openYnRecPercent = prev_rm_iss > 0 ? (((prev_yn_prd + prev_yn_wst + prev_yn_dst) / prev_rm_iss) * 100) : 0;
+                openYnWip = prev_rm_iss > 0 ? (prev_rm_iss * (100 - (openYnRecPercent + 1.5)) / 100) : 0;
+
+                 tbody.innerHTML += `<tr style="background-color: #fff9c4; font-weight: bold; color: #000;">
+                    <td>Opening</td>
+                    <td class="grp-rm-iss">-</td><td class="grp-rm-iss">-</td><td class="grp-rm-iss">-</td><td class="grp-rm-iss">-</td>
+                    
+                    <td class="grp-yn-prd">-</td><td class="grp-yn-prd">-</td><td class="grp-yn-prd">-</td><td class="grp-yn-prd">-</td><td class="grp-yn-prd"><b>${openYnWip.toFixed(0)}</b></td>
+                    <td class="grp-yn-iss">-</td><td class="grp-yn-iss">-</td><td class="grp-yn-iss">-</td>
+
+                    <td class="grp-yn-stk">${runYarn.toFixed(0)}</td><td class="grp-yn-stk">${runYarnWst.toFixed(0)}</td><td class="grp-yn-stk">${runYarnDst.toFixed(0)}</td>
+                </tr>`;
+            }
+
             if(allDates.some(d => d.startsWith(selectedMonth))) {
                 let sumRmIssTot = sum.rmCI + sum.rmFI + sum.rmRI;
 
                 let sumYnRecPercent = sumRmIssTot > 0 ? (((sum.ynPY + sum.ynPW + sum.ynPD) / sumRmIssTot) * 100) : 0;
                 let sumYnWip = sumRmIssTot > 0 ? (sumRmIssTot * (100 - (sumYnRecPercent + 1.5)) / 100) : 0;
+                
+                let finalTotalWip = sumYnWip + openYnWip;
 
                 tfoot.innerHTML = `<tr class="grand-total-row">
                     <td>TOTAL</td>
                     <td class="grp-rm-iss">${sum.rmCI.toFixed(0)}</td><td class="grp-rm-iss">${sum.rmFI.toFixed(0)}</td><td class="grp-rm-iss">${sum.rmRI.toFixed(0)}</td><td class="grp-rm-iss">${sumRmIssTot.toFixed(0)}</td>
                     
-                    <td class="grp-yn-prd">${sum.ynPY.toFixed(0)}</td><td class="grp-yn-prd">${sum.ynPW.toFixed(0)}</td><td class="grp-yn-prd">${sum.ynPD.toFixed(0)}</td><td class="grp-yn-prd">${sumYnRecPercent.toFixed(2)}%</td><td class="grp-yn-prd"><b>${sumYnWip.toFixed(0)}</b></td>
+                    <td class="grp-yn-prd">${sum.ynPY.toFixed(0)}</td><td class="grp-yn-prd">${sum.ynPW.toFixed(0)}</td><td class="grp-yn-prd">${sum.ynPD.toFixed(0)}</td><td class="grp-yn-prd">${sumYnRecPercent.toFixed(2)}%</td><td class="grp-yn-prd"><b>${finalTotalWip.toFixed(0)}</b></td>
                     <td class="grp-yn-iss">${sum.ynIY.toFixed(0)}</td><td class="grp-yn-iss">${sum.ynIW.toFixed(0)}</td><td class="grp-yn-iss">${sum.ynID.toFixed(0)}</td>
 
                     <td colspan="3" style="background:#f2f2f2; text-align:center;">STOCK EXCLUDED FROM TOTAL</td>
