@@ -196,6 +196,7 @@
                 <div class="form-group"><label>Lot No.</label><input type="text" id="recLotNo"></div>
                 <div class="form-group"><label>Qty (KG)</label><input type="number" id="recQty" step="0.01" oninput="calculateRec()"></div>
                 <div class="form-group"><label>Bags/Pellets</label><input type="number" id="recBales"></div>
+                <div class="form-group"><label>Cones</label><input type="number" id="recCones"></div>
                 <div class="form-group"><label>Rate</label><input type="number" id="recRate" step="0.01" oninput="calculateRec()"></div>
                 <div class="form-group"><label>Total Amount</label><input type="number" id="recAmount" readonly style="background:#f1f2f6;"></div>
                 <div class="form-group"><label>Remarks</label><input type="text" id="recRemarks"></div>
@@ -213,7 +214,7 @@
             </div>
             <table id="recHistoryTable">
                 <thead>
-                    <tr><th>Date</th><th>Category</th><th>Item</th><th>Lot No.</th><th>Bags/Pellets</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>
+                    <tr><th>Date</th><th>Category</th><th>Item</th><th>Lot No.</th><th>Bags/Pellets</th><th>Cones</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>
                 </thead>
                 <tbody id="recHistoryBody"></tbody>
             </table>
@@ -257,6 +258,7 @@
                 <div class="form-group"><label style="color: #1565c0;">Available (KG)</label><input type="number" id="issStockBal" readonly style="background:#e3f2fd; font-weight:bold;"></div>
                 <div class="form-group"><label>Issue Qty (KG)</label><input type="number" id="issQty" step="0.01" oninput="calculateIss()"></div>
                 <div class="form-group"><label>Bags/Pellets</label><input type="number" id="issBales"></div>
+                <div class="form-group"><label>Cones</label><input type="number" id="issCones"></div>
                 <div class="form-group"><label>Rate (Avg)</label><input type="number" id="issRate" step="0.01" readonly style="background:#f1f2f6;"></div>
                 <div class="form-group"><label>Total Amount</label><input type="number" id="issAmount" readonly style="background:#f1f2f6;"></div>
                 <div class="form-group"><label>Remarks</label><input type="text" id="issRemarks"></div>
@@ -274,7 +276,7 @@
             </div>
             <table id="issHistoryTable">
                 <thead>
-                    <tr><th>Date</th><th>Category</th><th>Dept</th><th>Item</th><th>Lot No.</th><th>Bags/Pellets</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>
+                    <tr><th>Date</th><th>Category</th><th>Dept</th><th>Item</th><th>Lot No.</th><th>Bags/Pellets</th><th>Cones</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>
                 </thead>
                 <tbody id="issHistoryBody"></tbody>
             </table>
@@ -365,7 +367,7 @@
 
     async function loadHistory(dept, bodyId) {
         const body = document.getElementById(bodyId);
-        body.innerHTML = "<tr><td colspan='9'>Loading...</td></tr>";
+        body.innerHTML = "<tr><td colspan='10'>Loading...</td></tr>";
         try {
             const res = await fetch(`${API_URL}?Department=${dept}&t=${Date.now()}`);
             const data = await res.json();
@@ -391,6 +393,7 @@
                         <td>${row["Item Description"]}</td>
                         <td>${row["Lot No."]||""}</td>
                         <td>${row["Bags/Pellets"]||0}</td>
+                        <td>${row["Cones"]||0}</td>
                         <td>${row["Qty (KG)"]}</td>
                         <td>${row["Rate"]}</td>
                         <td>${row["Total Amount"]}</td>
@@ -403,13 +406,14 @@
                         <td>${row["Item Description"]}</td>
                         <td>${row["Lot No."]||""}</td>
                         <td>${row["Bags/Pellets"]||0}</td>
+                        <td>${row["Cones"]||0}</td>
                         <td>${row["Qty (KG)"]}</td>
                         <td>${row["Rate"]}</td>
                         <td>${row["Total Amount"]}</td>
                     </tr>`;
                 }
             });
-        } catch(e) { body.innerHTML = "<tr><td colspan='9'>Error</td></tr>"; }
+        } catch(e) { body.innerHTML = "<tr><td colspan='10'>Error</td></tr>"; }
     }
 
     function goBack() {
@@ -585,6 +589,7 @@
             "Lot No.": document.getElementById('recLotNo').value ? "'" + document.getElementById('recLotNo').value : "",
             "Qty (KG)": document.getElementById('recQty').value, 
             "Bags/Pellets": document.getElementById('recBales').value, 
+            "Cones": document.getElementById('recCones').value, 
             "Rate": document.getElementById('recRate').value, 
             "Total Amount": document.getElementById('recAmount').value, 
             "Remarks": document.getElementById('recRemarks').value, 
@@ -604,6 +609,7 @@
             "Lot No.": document.getElementById('issLotNo').value === "UNSELECTED" ? "" : "'" + document.getElementById('issLotNo').value,
             "Qty (KG)": document.getElementById('issQty').value, 
             "Bags/Pellets": document.getElementById('issBales').value, 
+            "Cones": document.getElementById('issCones').value, 
             "Rate": document.getElementById('issRate').value, 
             "Total Amount": document.getElementById('issAmount').value, 
             "Remarks": document.getElementById('issRemarks').value, 
