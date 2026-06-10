@@ -6,14 +6,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --primary: #2c3e50;
-            --secondary: #1565c0;
+            --primary: #1e293b;
+            --secondary: #2563eb;
             --accent: #e67e22;
-            --light-bg: #f4f7f6;
-            --border: #dee2e6;
-            --footer-bg: #2c3e50;
+            --light-bg: #f8fafc;
+            --border: #e2e8f0;
+            --footer-bg: #0f172a;
         }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--light-bg); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--light-bg); color: #334155; }
         nav {
             background-color: #000000;
             padding: 12px 30px;
@@ -36,81 +36,137 @@
             align-items: center;
         }
         .report-title h1 { margin: 0; font-size: 24px; color: var(--primary); letter-spacing: 1px; }
-        .report-title p { margin: 5px 0 0; color: var(--secondary); font-weight: bold; font-size: 12px; text-transform: uppercase; }
+        .report-title p { margin: 5px 0 0; color: var(--secondary); font-weight: 700; font-size: 12px; text-transform: uppercase; }
         #printMonthDisplay {
             display: none;
             font-size: 18px;
             font-weight: bold;
-            color: #2c3e50;
+            color: #1e293b;
             margin-bottom: 10px;
-            border-bottom: 2px solid #2c3e50;
+            border-bottom: 2px solid #1e293b;
             padding-bottom: 5px;
         }
         .container { padding: 20px 40px; max-width: 1600px; margin: 0 auto; }
         .control-panel {
             background: white;
-            padding: 15px;
+            padding: 18px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             margin-bottom: 20px;
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
             align-items: flex-end;
+            border: 1px solid var(--border);
         }
-        .filter-group { display: flex; flex-direction: column; gap: 5px; }
-        .filter-group label { font-size: 11px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; }
-        input[type="month"], input[type="date"], input[type="text"], select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 5px; outline: none; background: white; font-family: inherit;}
-        .btn { padding: 10px 18px; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
-        .btn-refresh { background: #34495e; color: white; }
-        .btn-excel { background: #1d6f42; color: white; }
-        .btn-print { background: #2980b9; color: white; }
-        .toggles { display: flex; gap: 15px; align-items: center; border-left: 1px solid #ddd; padding-left: 20px; }
-        .toggles label { font-size: 12px; color: var(--primary); font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 4px; }
-        .table-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f8f9fa; color: #34495e; font-weight: 600; padding: 12px 15px; text-align: left; border-bottom: 2px solid #edf2f7; font-size: 13px; }
-        td { padding: 12px 15px; border-bottom: 1px solid #edf2f7; font-size: 13px; vertical-align: top; color: #2d3748; }
-        #stockTableFoot tr { background: var(--footer-bg) !important; }
-        #stockTableFoot td { color: #ffffff !important; font-weight: bold; border: none; padding: 15px; }
-        .dept-item { background: #f1f5f9; border-left: 3px solid var(--secondary); padding: 6px 10px; margin-bottom: 5px; border-radius: 4px; }
-        .dept-name { font-weight: bold; font-size: 11px; color: #1e293b; display: block; }
-        .dept-stats { font-size: 10px; color: #e67e22; font-weight: bold; }
-        .status-ok { background: #c6f6d5; color: #22543d; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; }
-        .status-nil { background: #fed7d7; color: #822727; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; }
-        .val-kg { display: block; font-weight: 500; }
-        .val-bal { color: #718096; font-size: 11px; display: block; }
-        .val-amt { color: var(--secondary); font-weight: bold; font-size: 11px; display: block; margin-top: 2px; }
-
-        /* --- NEW MODAL STYLES --- */
-        .clickable-dept { cursor: pointer; transition: background 0.2s, box-shadow 0.2s; }
-        .clickable-dept:hover { background: #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .filter-group { display: flex; flex-direction: column; gap: 6px; }
+        .filter-group label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;}
+        input[type="month"], input[type="date"], input[type="text"], select { padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: white; font-family: inherit; font-size: 13px; transition: 0.2s;}
+        input:focus, select:focus { border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .btn { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-refresh { background: #334155; color: white; }
+        .btn-refresh:hover { background: #1e293b; }
+        .btn-excel { background: #16a34a; color: white; }
+        .btn-excel:hover { background: #15803d; }
+        .btn-print { background: #2563eb; color: white; }
+        .btn-print:hover { background: #1d4ed8; }
+        .toggles { display: flex; gap: 15px; align-items: center; border-left: 2px solid #e2e8f0; padding-left: 20px; height: 100%; }
+        .toggles label { font-size: 13px; color: var(--primary); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; user-select: none;}
+        .toggles input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
         
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(3px); }
-        .modal-content { background-color: #ffffff; margin: 5% auto; padding: 25px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 50%; max-width: 600px; animation: modalFadeIn 0.3s; }
-        @keyframes modalFadeIn { from {opacity: 0; transform: translateY(-20px);} to {opacity: 1; transform: translateY(0);} }
-        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; }
-        .close:hover, .close:focus { color: #e53e3e; text-decoration: none; }
-        .modal-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .modal-table th, .modal-table td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; font-size: 13px;}
-        .modal-table th { background-color: #f8f9fa; color: var(--primary); }
-        .modal-table tr:nth-child(even) { background-color: #f8fafc; }
-        .modal-header-info { margin-bottom: 15px; border-bottom: 2px solid var(--secondary); padding-bottom: 10px; }
-        .modal-header-info h3 { margin: 0 0 5px 0; color: var(--primary); font-size: 18px;}
-        .modal-header-info p { margin: 0; color: #718096; font-size: 13px; font-weight: 500;}
+        /* Table Readability Improvements */
+        .table-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { 
+            background: #f1f5f9; 
+            color: #334155; 
+            font-weight: 700; 
+            padding: 14px 16px; 
+            text-align: left; 
+            border-bottom: 2px solid #cbd5e1; 
+            font-size: 13px; 
+            position: sticky; 
+            top: 0; 
+            z-index: 10; 
+        }
+        tbody tr:nth-child(even) { background-color: #f8fafc; }
+        tbody tr:hover { background-color: #f1f5f9; }
+        td { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; font-size: 13px; vertical-align: top; color: #334155; }
+        
+        /* Distinct Value Styling */
+        .val-kg { display: block; font-weight: 700; color: #0f172a; font-size: 13px; margin-bottom: 5px; }
+        .val-bal { color: #64748b; font-size: 12px; display: block; margin-bottom: 5px; font-weight: 500;}
+        .val-cones { color: #7e22ce; font-size: 12px; display: block; margin-bottom: 5px; font-weight: 600; }
+        .val-amt { color: #059669; font-weight: 700; font-size: 12px; display: block; margin-top: 6px; border-top: 1px dashed #cbd5e1; padding-top: 4px;}
+
+        /* Footer styling */
+        #stockTableFoot tr { background: var(--footer-bg) !important; }
+        #stockTableFoot td { background: var(--footer-bg) !important; color: #ffffff !important; font-weight: bold; border: none; padding: 18px 16px; font-size: 14px;}
+        #stockTableFoot span { color: #ffffff !important; border-top: none !important; }
+
+        /* Improved Dept Issue Tags */
+        .dept-item { 
+            background: #ffffff; 
+            border: 1px solid #cbd5e1; 
+            border-left: 4px solid var(--secondary); 
+            padding: 10px 12px; 
+            margin-bottom: 8px; 
+            border-radius: 6px; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
+        }
+        .dept-name { font-weight: 700; font-size: 12px; color: #1e293b; display: block; margin-bottom: 6px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;}
+        .dept-stats { font-size: 11px; line-height: 1.6; display: block;}
+        
+        /* Status Badges */
+        .status-ok { background: #dcfce7; color: #166534; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; border: 1px solid #bbf7d0; letter-spacing: 0.5px;}
+        .status-nil { background: #fee2e2; color: #991b1b; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; border: 1px solid #fecaca; letter-spacing: 0.5px;}
+
+        /* --- MODAL STYLES --- */
+        .clickable-dept { cursor: pointer; transition: all 0.2s; }
+        .clickable-dept:hover { background: #f8fafc; border-color: #94a3b8; transform: translateY(-1px); box-shadow: 0 3px 6px rgba(0,0,0,0.08); }
+        
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); }
+        .modal-content { background-color: #ffffff; margin: 5% auto; padding: 30px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); width: 60%; max-width: 700px; animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes modalFadeIn { from {opacity: 0; transform: translateY(-20px) scale(0.98);} to {opacity: 1; transform: translateY(0) scale(1);} }
+        .close { color: #94a3b8; float: right; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; transition: 0.2s;}
+        .close:hover, .close:focus { color: #ef4444; }
+        .modal-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .modal-table th, .modal-table td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; font-size: 13px;}
+        .modal-table th { background-color: #f8fafc; color: var(--primary); font-weight: 700;}
+        .modal-header-info { margin-bottom: 20px; border-bottom: 2px solid var(--secondary); padding-bottom: 12px; }
+        .modal-header-info h3 { margin: 0 0 6px 0; color: var(--primary); font-size: 20px;}
+        .modal-header-info p { margin: 0; color: #64748b; font-size: 14px; font-weight: 500;}
 
         @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            body { background: white; color: #000 !important; }
             nav, .control-panel, .btn { display: none !important; }
-            #printMonthDisplay { display: block !important; }
-            .container { padding: 0; width: 100%; }
-            .report-header { border: none; }
+            #printMonthDisplay { display: block !important; color: #000 !important; }
+            .container { padding: 0; width: 100%; max-width: 100%;}
+            .report-header { border: none; padding: 0 0 20px 0;}
+            .report-title h1, .report-title p { color: #000 !important; }
+            .table-card { box-shadow: none; border: none; }
+            th { color: #000 !important; background: #f1f5f9 !important; border-bottom: 2px solid #000 !important; }
+            td { padding: 8px 10px; font-size: 11px; color: #000 !important; border-bottom: 1px solid #ccc !important; }
+            .val-kg { font-size: 11px; margin-bottom: 2px; color: #000 !important; }
+            .val-bal, .val-cones, .val-amt { font-size: 10px; margin-bottom: 2px; color: #000 !important; }
+            .dept-item { padding: 6px; margin-bottom: 4px; border: 1px solid #ccc !important; }
+            .dept-name { color: #000 !important; border-bottom: 1px solid #ccc !important; }
+            .dept-stats span { color: #000 !important; }
+            
+            /* Print fix for footer so it doesn't vanish */
+            #stockTableFoot tr, #stockTableFoot td { background: transparent !important; color: #000 !important; border-top: 2px solid #000 !important; border-bottom: 2px solid #000 !important; }
+            #stockTableFoot span { color: #000 !important; border-top: none !important; }
         }
     </style>
 </head>
 <body>
 <nav>
     <a href="index.html" class="nav-link"><i class="fa fa-home"></i> Return to Home 🏠</a>
-    <span style="color: #666; font-size: 12px; font-weight: bold;">NRV Denim ERP | Professional Report</span>
+    <span style="color: #94a3b8; font-size: 13px; font-weight: 700; letter-spacing: 0.5px;">NRV Denim ERP | Professional Report</span>
 </nav>
 
 <div class="report-header">
@@ -119,7 +175,7 @@
         <p>Material Balance & Departmental Issuance Report</p>
         <div id="printMonthDisplay"></div>
     </div>
-    <div style="display: flex; gap: 10px;">
+    <div style="display: flex; gap: 12px;">
         <button class="btn btn-excel" onclick="exportProfessionalExcel()"><i class="fa fa-file-excel"></i> Export Pro Excel</button>
         <button class="btn btn-print" onclick="window.print()"><i class="fa fa-print"></i> Print Report</button>
     </div>
@@ -143,18 +199,19 @@
             <input type="date" id="reportDate" onchange="loadBalanceStock()">
         </div>
         <div class="filter-group">
-            <label>Search</label>
-            <input type="text" id="stockFilter" placeholder="Filter Category or Item..." onkeyup="filterStockTable()">
+            <label>Search Filter</label>
+            <input type="text" id="stockFilter" placeholder="Category, Item, Lot..." onkeyup="filterStockTable()">
         </div>
         <button class="btn btn-refresh" onclick="loadBalanceStock()">
-            <i class="fa fa-sync-alt" id="refreshIcon"></i> Refresh Report
+            <i class="fa fa-sync-alt" id="refreshIcon"></i> Refresh Data
         </button>
         <div class="toggles">
             <label><input type="checkbox" id="viewDept" checked onchange="updateView()"> Dept Details</label>
             <label><input type="checkbox" id="viewKg" checked onchange="updateView()"> KG</label>
             <label><input type="checkbox" id="viewBales" checked onchange="updateView()"> Bags/Pellets</label>
+            <label><input type="checkbox" id="viewCones" checked onchange="updateView()"> Cones</label>
             <label><input type="checkbox" id="viewAmt" checked onchange="updateView()"> Value</label>
-            <label style="color: #e53e3e;"><input type="checkbox" id="hideZero" onchange="updateView()"> Hide Nil</label>
+            <label style="color: #ef4444;"><input type="checkbox" id="hideZero" onchange="updateView()"> Hide Nil Stock</label>
         </div>
     </div>
 
@@ -162,18 +219,19 @@
         <table id="stockTable">
             <thead>
                 <tr>
-                    <th style="width: 12%;">Category</th>
-                    <th style="width: 18%;">Item Description</th>
-                    <th style="width: 10%;">Lot No.</th> <th id="thDept" style="width: 20%;">Dept. Wise Issue (Qty)</th>
-                    <th>Opening Bal</th>
-                    <th>Received (+)</th>
-                    <th>Issued (-)</th>
-                    <th>Closing Bal</th>
-                    <th>Status</th>
+                    <th style="width: 10%;">Category</th>
+                    <th style="width: 16%;">Item Description</th>
+                    <th style="width: 9%;">Lot No.</th> 
+                    <th id="thDept" style="width: 18%;">Dept. Wise Issue (Qty)</th>
+                    <th style="width: 11%;">Opening Bal</th>
+                    <th style="width: 11%;">Received (+)</th>
+                    <th style="width: 11%;">Issued (-)</th>
+                    <th style="width: 11%;">Closing Bal</th>
+                    <th style="width: 3%;">Status</th>
                 </tr>
             </thead>
             <tbody id="stockTableBody">
-                <tr><td colspan="9" style="text-align: center; padding: 40px;">Fetching data...</td></tr>
+                <tr><td colspan="9" style="text-align: center; padding: 60px; color: #64748b; font-weight: 600;">Fetching data...</td></tr>
             </tbody>
             <tfoot id="stockTableFoot"></tfoot>
         </table>
@@ -193,6 +251,7 @@
                     <th>Issue Date</th>
                     <th style="text-align: right;">Quantity (KG)</th>
                     <th style="text-align: right;">Bags/Pellets</th>
+                    <th style="text-align: right;">Cones</th>
                 </tr>
             </thead>
             <tbody id="modalTableBody">
@@ -256,10 +315,8 @@
                     const tzOffset = (new Date()).getTimezoneOffset() * 60000;
                     const itemDateStr = (new Date(dateVal - tzOffset)).toISOString().split('T')[0];
                     
-                    // NEW: Ensure lot number is stringified and cleaned for the grouping key
                     const lotValue = (item["Lot No."] !== undefined && item["Lot No."] !== null && item["Lot No."] !== "") ? String(item["Lot No."]).trim() : "-";
                     
-                    // NEW: Create grouping key based on Category + Item + Lot No.
                     const k = (item["Category"]||"N/A").trim().toUpperCase() + "|" + 
                               (item["Item Description"]||"").trim().toUpperCase() + "|" + 
                               lotValue.toUpperCase();
@@ -269,67 +326,84 @@
                             category: (item["Category"]||""), 
                             item: (item["Item Description"]||""), 
                             lotNo: lotValue, 
-                            deptIssues: {}, opKg: 0, opBal: 0, opAmt: 0, reKg: 0, reBal: 0, reAmt: 0, isKg: 0, isBal: 0, isAmt: 0 
+                            deptIssues: {}, 
+                            opKg: 0, opBal: 0, opCones: 0, opAmt: 0, 
+                            reKg: 0, reBal: 0, reCones: 0, reAmt: 0, 
+                            isKg: 0, isBal: 0, isCones: 0, isAmt: 0 
                         };
                     }
-                    const q = parseFloat(item["Qty (KG)"]||0), b = parseFloat(item["Bags/Pellets"]||0), a = parseFloat(item["Total Amount"]||0);
+                    
+                    const q = parseFloat(item["Qty (KG)"]||0), b = parseFloat(item["Bags/Pellets"]||0), c = parseFloat(item["Cones"]||0), a = parseFloat(item["Total Amount"]||0);
                     let isCurrentPeriod = (periodType === 'month') ? (itemMonth === targetMonth) : (itemDateStr === targetDate);
                     let isPastPeriod = (periodType === 'month') ? (itemMonth < targetMonth) : (itemDateStr < targetDate);
 
                     if(type === 'i' && item["Issuing To (Dept)"] && isCurrentPeriod) {
                         const dpt = item["Issuing To (Dept)"].trim();
-                        // Initialize department and dates tracking object if it doesn't exist
                         if(!globalStockMap[k].deptIssues[dpt]) {
-                            globalStockMap[k].deptIssues[dpt] = { kg: 0, bal: 0, dates: {} };
+                            globalStockMap[k].deptIssues[dpt] = { kg: 0, bal: 0, cones: 0, dates: {} };
                         }
                         globalStockMap[k].deptIssues[dpt].kg += q;
                         globalStockMap[k].deptIssues[dpt].bal += b;
+                        globalStockMap[k].deptIssues[dpt].cones += c;
 
-                        // Track date-wise breakdown
                         if(!globalStockMap[k].deptIssues[dpt].dates[itemDateStr]) {
-                            globalStockMap[k].deptIssues[dpt].dates[itemDateStr] = { kg: 0, bal: 0 };
+                            globalStockMap[k].deptIssues[dpt].dates[itemDateStr] = { kg: 0, bal: 0, cones: 0 };
                         }
                         globalStockMap[k].deptIssues[dpt].dates[itemDateStr].kg += q;
                         globalStockMap[k].deptIssues[dpt].dates[itemDateStr].bal += b;
+                        globalStockMap[k].deptIssues[dpt].dates[itemDateStr].cones += c;
                     }
                     if(isPastPeriod) { 
                         globalStockMap[k].opKg += (type==='r'?q:-q); 
                         globalStockMap[k].opBal += (type==='r'?b:-b); 
+                        globalStockMap[k].opCones += (type==='r'?c:-c);
                         globalStockMap[k].opAmt += (type==='r'?a:-a); 
                     } else if(isCurrentPeriod) { 
-                        if(type==='r'){ globalStockMap[k].reKg+=q; globalStockMap[k].reBal+=b; globalStockMap[k].reAmt+=a; } 
-                        else { globalStockMap[k].isKg+=q; globalStockMap[k].isBal+=b; globalStockMap[k].isAmt+=a; } 
+                        if(type==='r'){ 
+                            globalStockMap[k].reKg+=q; globalStockMap[k].reBal+=b; globalStockMap[k].reCones+=c; globalStockMap[k].reAmt+=a; 
+                        } else { 
+                            globalStockMap[k].isKg+=q; globalStockMap[k].isBal+=b; globalStockMap[k].isCones+=c; globalStockMap[k].isAmt+=a; 
+                        } 
                     }
                 });
             };
             proc(recs, 'r'); proc(iss, 'i'); renderTable();
-        } catch(e) { tbody.innerHTML = "<tr><td colspan='9'>Error loading data.</td></tr>"; }
+        } catch(e) { tbody.innerHTML = "<tr><td colspan='9' style='text-align:center; padding: 40px; color: red;'>Error loading data.</td></tr>"; }
         finally { icon.classList.remove('fa-spin'); }
     }
 
     function renderTable() {
         const tbody = document.getElementById('stockTableBody');
-        const sD = document.getElementById('viewDept').checked, sK = document.getElementById('viewKg').checked, sB = document.getElementById('viewBales').checked, sA = document.getElementById('viewAmt').checked, hZ = document.getElementById('hideZero').checked;
+        const sD = document.getElementById('viewDept').checked, 
+              sK = document.getElementById('viewKg').checked, 
+              sB = document.getElementById('viewBales').checked, 
+              sC = document.getElementById('viewCones').checked, 
+              sA = document.getElementById('viewAmt').checked, 
+              hZ = document.getElementById('hideZero').checked;
+              
         const filterVal = document.getElementById("stockFilter").value.toUpperCase();
         document.getElementById('thDept').style.display = sD ? '' : 'none';
         tbody.innerHTML = "";
-        let t = { ok:0, ob:0, oa:0, rk:0, rb:0, ra:0, ik:0, ib:0, ia:0, ck:0, cb:0, ca:0 };
+        
+        let t = { ok:0, ob:0, oc:0, oa:0, rk:0, rb:0, rc:0, ra:0, ik:0, ib:0, ic:0, ia:0, ck:0, cb:0, cc:0, ca:0 };
 
         for(let k in globalStockMap) {
             let e = globalStockMap[k];
-            let ck = e.opKg+e.reKg-e.isKg, cb = e.opBal+e.reBal-e.isBal, ca = e.opAmt+e.reAmt-e.isAmt;
+            let ck = e.opKg+e.reKg-e.isKg, cb = e.opBal+e.reBal-e.isBal, cc = e.opCones+e.reCones-e.isCones, ca = e.opAmt+e.reAmt-e.isAmt;
+            
             if(hZ && ck <= 0) continue;
             let searchString = (e.category + " " + e.item + " " + e.lotNo).toUpperCase();
             if (filterVal && !searchString.includes(filterVal)) continue;
 
-            t.ok+=e.opKg; t.ob+=e.opBal; t.oa+=e.opAmt;
-            t.rk+=e.reKg; t.rb+=e.reBal; t.ra+=e.reAmt;
-            t.ik+=e.isKg; t.ib+=e.isBal; t.ia+=e.isAmt;
-            t.ck+=ck; t.cb+=cb; t.ca+=ca;
+            t.ok+=e.opKg; t.ob+=e.opBal; t.oc+=e.opCones; t.oa+=e.opAmt;
+            t.rk+=e.reKg; t.rb+=e.reBal; t.rc+=e.reCones; t.ra+=e.reAmt;
+            t.ik+=e.isKg; t.ib+=e.isBal; t.ic+=e.isCones; t.ia+=e.isAmt;
+            t.ck+=ck; t.cb+=cb; t.cc+=cc; t.ca+=ca;
 
-            const format = (kg, bal, amt, prefix="") => (
+            const format = (kg, bal, cones, amt, prefix="") => (
                 (sK ? `<span class="val-kg">${prefix}${kg.toLocaleString(undefined, {minimumFractionDigits: 2})} KG</span>` : "") +
                 (sB ? `<span class="val-bal">${prefix}${bal} Bags/Pellets</span>` : "") +
+                (sC ? `<span class="val-cones">${prefix}${cones} Cones</span>` : "") +
                 (sA ? `<span class="val-amt">₹ ${amt.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>` : "")
             );
             
@@ -338,32 +412,51 @@
                 for(let d in e.deptIssues) {
                     const safeDatesData = encodeURIComponent(JSON.stringify(e.deptIssues[d].dates));
                     const safeDeptName = encodeURIComponent(d);
-                    // NEW: Appending lot no to modal title string to differentiate items
                     const safeItemName = encodeURIComponent(e.item + " [Lot: " + e.lotNo + "]");
 
+                    // Enhanced readability for Dept tags
                     deptHtml += `<div class="dept-item clickable-dept" onclick="openDateModal('${safeDeptName}', '${safeItemName}', '${safeDatesData}')">
-                        <span class="dept-name" title="Click for Date Breakdown">${d} <i class="fa fa-hand-pointer" style="color: #94a3b8; font-size: 10px; margin-left: 3px;"></i></span>
-                        <span class="dept-stats">${sK?e.deptIssues[d].kg.toLocaleString(undefined, {minimumFractionDigits: 2})+' KG':''} ${sB?'| '+e.deptIssues[d].bal+' Bags/Pellets':''}</span>
+                        <span class="dept-name" title="Click for Date Breakdown">${d} <i class="fa fa-hand-pointer" style="color: #94a3b8; font-size: 11px; float: right; margin-top: 2px;"></i></span>
+                        <span class="dept-stats">
+                            ${sK ? `<span style="color:#0f172a; font-weight:700;">${e.deptIssues[d].kg.toLocaleString(undefined, {minimumFractionDigits: 2})} KG</span>` : ''}
+                            ${sB ? `<br><span style="color:#64748b; font-weight:500;">${e.deptIssues[d].bal} Bags/Pellets</span>` : ''}
+                            ${sC ? `<br><span style="color:#7e22ce; font-weight:600;">${e.deptIssues[d].cones} Cones</span>` : ''}
+                        </span>
                     </div>`;
                 }
-            } else { deptHtml = `<span style="color:#cbd5e0; font-style:italic">No issues</span>`; }
+            } else { deptHtml = `<span style="color:#cbd5e1; font-style:italic; font-weight:500;">No issues</span>`; }
 
             tbody.innerHTML += `<tr>
-                <td style="font-weight:bold; color:var(--primary)">${e.category}</td>
-                <td>${e.item}</td>
-                <td>${e.lotNo}</td> <td style="display: ${sD ? '' : 'none'}">${deptHtml}</td>
-                <td>${format(e.opKg, e.opBal, e.opAmt)}</td>
-                <td style="background: #f0fff4;">${format(e.reKg, e.reBal, e.reAmt, "+ ")}</td>
-                <td style="background: #fff5f5;">${format(e.isKg, e.isBal, e.isAmt, "- ")}</td>
-                <td style="font-weight:bold;">${format(ck, cb, ca)}</td>
+                <td style="font-weight:700; color:var(--primary)">${e.category}</td>
+                <td style="font-weight:500;">${e.item}</td>
+                <td style="color:#475569; font-weight:600;">${e.lotNo}</td> 
+                <td style="display: ${sD ? '' : 'none'}">${deptHtml}</td>
+                <td>${format(e.opKg, e.opBal, e.opCones, e.opAmt)}</td>
+                <td style="background: rgba(220, 252, 231, 0.3); border-left: 1px solid #f0fdf4;">${format(e.reKg, e.reBal, e.reCones, e.reAmt, "+ ")}</td>
+                <td style="background: rgba(254, 226, 226, 0.3); border-left: 1px solid #fef2f2;">${format(e.isKg, e.isBal, e.isCones, e.isAmt, "- ")}</td>
+                <td style="background: rgba(241, 245, 249, 0.5); border-left: 1px solid #e2e8f0;">${format(ck, cb, cc, ca)}</td>
                 <td><span class="${ck>0?'status-ok':'status-nil'}">${ck>0?'IN STOCK':'NIL'}</span></td>
             </tr>`;
         }
-        const fF = (kg, bal, amt) => (sK ? kg.toLocaleString(undefined, {mFD:2})+" KG<br>":"")+(sB ? bal.toLocaleString()+" Bags/Pellets<br>":"")+(sA ? "₹ "+amt.toLocaleString(undefined, {mFD:2}):"");
-        document.getElementById('stockTableFoot').innerHTML = `<tr><td colspan="${sD?4:3}" style="color:white !important;">GRAND TOTAL:</td><td style="color:white !important;">${fF(t.ok, t.ob, t.oa)}</td><td style="color:white !important;">${fF(t.rk, t.rb, t.ra)}</td><td style="color:white !important;">${fF(t.ik, t.ib, t.ia)}</td><td style="color:white !important;">${fF(t.ck, t.cb, t.ca)}</td><td></td></tr>`;
+        
+        // Re-using the format classes for the footer to maintain spacing layout
+        const fF = (kg, bal, cones, amt) => (
+            (sK ? `<span class="val-kg">${kg.toLocaleString(undefined, {minimumFractionDigits:2})} KG</span>`:"") + 
+            (sB ? `<span class="val-bal">${bal.toLocaleString()} Bags/Pellets</span>`:"") + 
+            (sC ? `<span class="val-cones">${cones.toLocaleString()} Cones</span>`:"") + 
+            (sA ? `<span class="val-amt">₹ ${amt.toLocaleString(undefined, {minimumFractionDigits:2})}</span>`:"")
+        );
+        
+        document.getElementById('stockTableFoot').innerHTML = `<tr>
+            <td colspan="${sD?4:3}">GRAND TOTAL:</td>
+            <td>${fF(t.ok, t.ob, t.oc, t.oa)}</td>
+            <td>${fF(t.rk, t.rb, t.rc, t.ra)}</td>
+            <td>${fF(t.ik, t.ib, t.ic, t.ia)}</td>
+            <td>${fF(t.ck, t.cb, t.cc, t.ca)}</td>
+            <td></td>
+        </tr>`;
     }
 
-    // --- NEW: MODAL FUNCTIONS ---
     function openDateModal(encodedDept, encodedItem, encodedDates) {
         const dept = decodeURIComponent(encodedDept);
         const item = decodeURIComponent(encodedItem);
@@ -378,30 +471,33 @@
         const sortedDates = Object.keys(datesObj).sort();
         let totalKg = 0;
         let totalBal = 0;
+        let totalCones = 0;
 
         if (sortedDates.length === 0) {
-             tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px;">No date-wise data available for this period.</td></tr>';
+             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 30px; color: #64748b;">No date-wise data available for this period.</td></tr>';
         } else {
             sortedDates.forEach(dateStr => {
                 const data = datesObj[dateStr];
                 totalKg += data.kg;
                 totalBal += data.bal;
+                totalCones += data.cones;
                 
-                // Format the YYYY-MM-DD string nicely
                 const dateObj = new Date(dateStr);
                 const displayDate = dateObj.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
 
                 tbody.innerHTML += `<tr>
-                    <td style="font-weight: 500;">${displayDate}</td>
-                    <td style="text-align: right; color: var(--primary); font-weight: bold;">${data.kg.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                    <td style="text-align: right; color: #718096;">${data.bal}</td>
+                    <td style="font-weight: 600; color: #334155;">${displayDate}</td>
+                    <td style="text-align: right; color: var(--primary); font-weight: 700;">${data.kg.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td style="text-align: right; color: #64748b; font-weight: 500;">${data.bal}</td>
+                    <td style="text-align: right; color: #7e22ce; font-weight: 600;">${data.cones}</td>
                 </tr>`;
             });
             
-            tbody.innerHTML += `<tr style="background-color: #f1f5f9; border-top: 2px solid #cbd5e0;">
-                <td style="font-weight: bold; color: var(--primary);">TOTAL:</td>
-                <td style="text-align: right; font-weight: bold; color: var(--secondary);">${totalKg.toLocaleString(undefined, {minimumFractionDigits: 2})} KG</td>
-                <td style="text-align: right; font-weight: bold; color: var(--primary);">${totalBal} Bags/Pellets</td>
+            tbody.innerHTML += `<tr style="background-color: #f1f5f9; border-top: 2px solid #cbd5e1;">
+                <td style="font-weight: 700; color: var(--primary);">TOTAL:</td>
+                <td style="text-align: right; font-weight: 700; color: #0f172a;">${totalKg.toLocaleString(undefined, {minimumFractionDigits: 2})} KG</td>
+                <td style="text-align: right; font-weight: 700; color: #475569;">${totalBal} Bags/Pellets</td>
+                <td style="text-align: right; font-weight: 700; color: #7e22ce;">${totalCones} Cones</td>
             </tr>`;
         }
         
@@ -418,17 +514,17 @@
             modal.style.display = "none";
         }
     }
-    // --- END MODAL FUNCTIONS ---
 
     function exportProfessionalExcel() {
-        // Added "Lot No." to the Excel header
-        const data = [["Category", "Item Description", "Lot No.", "Dept Issues", "Opening KG", "Opening Bags/Pellets", "Opening Value", "Received KG", "Received Bags/Pellets", "Received Value", "Issued KG", "Issued Bags/Pellets", "Issued Value", "Closing KG", "Closing Bags/Pellets", "Closing Value", "Status"]];
+        const data = [["Category", "Item Description", "Lot No.", "Dept Issues", "Opening KG", "Opening Bags/Pellets", "Opening Cones", "Opening Value", "Received KG", "Received Bags/Pellets", "Received Cones", "Received Value", "Issued KG", "Issued Bags/Pellets", "Issued Cones", "Issued Value", "Closing KG", "Closing Bags/Pellets", "Closing Cones", "Closing Value", "Status"]];
+        
         for(let k in globalStockMap) {
             let e = globalStockMap[k];
-            let ck = e.opKg+e.reKg-e.isKg, cb = e.opBal+e.reBal-e.isBal, ca = e.opAmt+e.reAmt-e.isAmt;
-            let deptTxt = Object.keys(e.deptIssues).length > 0 ? Object.entries(e.deptIssues).map(([d, v]) => `${d}: ${v.kg}KG`).join(" | ") : "No Issues";
-            // Pushed e.lotNo into the Excel row export
-            data.push([e.category, e.item, e.lotNo, deptTxt, e.opKg, e.opBal, e.opAmt, e.reKg, e.reBal, e.reAmt, e.isKg, e.isBal, e.isAmt, ck, cb, ca, ck > 0 ? "IN STOCK" : "NIL"]);
+            let ck = e.opKg+e.reKg-e.isKg, cb = e.opBal+e.reBal-e.isBal, cc = e.opCones+e.reCones-e.isCones, ca = e.opAmt+e.reAmt-e.isAmt;
+            
+            let deptTxt = Object.keys(e.deptIssues).length > 0 ? Object.entries(e.deptIssues).map(([d, v]) => `${d}: ${v.kg}KG (${v.cones}C)`).join(" | ") : "No Issues";
+            
+            data.push([e.category, e.item, e.lotNo, deptTxt, e.opKg, e.opBal, e.opCones, e.opAmt, e.reKg, e.reBal, e.reCones, e.reAmt, e.isKg, e.isBal, e.isCones, e.isAmt, ck, cb, cc, ca, ck > 0 ? "IN STOCK" : "NIL"]);
         }
         const ws = XLSX.utils.aoa_to_sheet(data);
         const wb = XLSX.utils.book_new();
