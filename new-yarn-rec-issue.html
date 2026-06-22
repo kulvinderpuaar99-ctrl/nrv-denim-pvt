@@ -181,10 +181,10 @@
                     <select id="recCat" onchange="fetchRecItemsByCategory()">
                         <option value="">Select Category</option>
                         <option value="Market Purchase Yarn">Market Purchase Yarn</option>
-                        <option value="OE Plant Waste">OE Plant Waste</option>
+                        <option value="Ring U-1 Yarn">Ring U-2 Yarn</option>
                         <option value="OE U-2 Yarn">OE U-2 Yarn</option>
                         <option value="OE U-3 Yarn">OE U-3 Yarn</option>
-                        <option value="OE Dust">OE Dust</option>
+                       
                         
                     </select>
                 </div>
@@ -493,6 +493,7 @@
     function calculateRec() { const q = document.getElementById('recQty').value||0, r = document.getElementById('recRate').value||0; document.getElementById('recAmount').value = (q*r).toFixed(2); }
     function calculateIss() { const q = document.getElementById('issQty').value||0, r = document.getElementById('issRate').value||0; document.getElementById('issAmount').value = (q*r).toFixed(2); }
 
+    // MODIFIED FUNCTION: Fetch items that only have available stock > 0
     async function fetchItemsByCategory() {
         const cat = document.getElementById('issCat').value, sel = document.getElementById('issItem');
         sel.innerHTML = '<option>Loading...</option>';
@@ -503,12 +504,44 @@
             ]);
             cachedReceipts = await rR.json(); cachedIssues = await rI.json();
             
-            // Bug Fix: Cast to string before matching
-            const items = [...new Set(cachedReceipts.filter(r => String(r["Category"]||"").toUpperCase() === String(cat).toUpperCase()).map(r => r["Item Description"]))];
+            // Get all unique items mapped to this category
+            const allItems = [...new Set(cachedReceipts.filter(r => String(r["Category"]||"").toUpperCase() === String(cat).toUpperCase()).map(r => r["Item Description"]))];
             
             sel.innerHTML = '<option value="">Select Item</option>';
-            items.forEach(i => { if(i) sel.innerHTML += `<option value="${i}">${i}</option>`; });
-        } catch(e){}
+
+            // Iterate over items to calculate if they have available stock across all their lots
+            allItems.forEach(itm => {
+                if(itm) {
+                    let tQ = 0;
+                    let tI = 0;
+                    const strCat = String(cat).trim();
+                    const strItm = String(itm).trim();
+
+                    // Sum receipts for this specific Item
+                    cachedReceipts.filter(r => 
+                        String(r["Category"]||"").trim() === strCat && 
+                        String(r["Item Description"]||"").trim() === strItm
+                    ).forEach(m => { 
+                        tQ += parseFloat(m["Qty (KG)"]||0); 
+                    });
+                    
+                    // Sum issues for this specific Item
+                    cachedIssues.filter(i => 
+                        String(i["Category"]||"").trim() === strCat && 
+                        String(i["Item Description"]||"").trim() === strItm
+                    ).forEach(m => { 
+                        tI += parseFloat(m["Qty (KG)"]||0); 
+                    });
+
+                    // Only append to dropdown if stock is greater than 0
+                    if ((tQ - tI) > 0) {
+                        sel.innerHTML += `<option value="${itm}">${itm}</option>`;
+                    }
+                }
+            });
+        } catch(e){
+            sel.innerHTML = '<option value="">Error Loading Items</option>';
+        }
     }
 
     function fetchItemStats() {
@@ -532,7 +565,35 @@
             .map(r => String(r["Lot No."] || "").trim()))];
             
         lots.forEach(lot => { 
-            lotSel.innerHTML += `<option value="${lot}">${lot === "" ? "No Lot" : lot}</option>`; 
+            let tQ = 0;
+            let tI = 0;
+            const strLot = String(lot).trim();
+
+            // Calculate total receipts for this single lot
+            cachedReceipts.filter(r => 
+                String(r["Category"]||"").trim() === strCat && 
+                String(r["Item Description"]||"").trim() === strItm && 
+                String(r["Lot No."] || "").trim() === strLot
+            ).forEach(m => { 
+                tQ += parseFloat(m["Qty (KG)"]||0); 
+            });
+            
+            // Calculate total issues for this single lot
+            cachedIssues.filter(i => 
+                String(i["Category"]||"").trim() === strCat && 
+                String(i["Item Description"]||"").trim() === strItm && 
+                String(i["Lot No."] || "").trim() === strLot
+            ).forEach(m => { 
+                tI += parseFloat(m["Qty (KG)"]||0); 
+            });
+
+            // Dynamically check remaining stock balance
+            const availableStock = tQ - tI;
+
+            // Only show lot options that have available stock greater than 0
+            if (availableStock > 0) {
+                lotSel.innerHTML += `<option value="${lot}">${lot === "" ? "No Lot" : lot}</option>`; 
+            }
         });
     }
 
@@ -598,7 +659,21 @@
         executePost(d, "Saved!", "rawRecForm", "YARN_REC", "recHistoryBody");
     }
 
+    // MODIFIED FUNCTION: Validate Issue Quantity against Available Stock before submitting
     function submitRawIssue() {
+        const issQty = parseFloat(document.getElementById('issQty').value || 0);
+        const availStock = parseFloat(document.getElementById('issStockBal').value || 0);
+
+        if (issQty <= 0) {
+            alert("Please enter a valid issue quantity greater than 0.");
+            return;
+        }
+
+        if (issQty > availStock) {
+            alert("Error: Issue quantity cannot be greater than the available stock!");
+            return;
+        }
+
         const d = { 
             "Department": "YARN_ISSUE", 
             "Date": document.getElementById('issDate').value, 
@@ -607,7 +682,7 @@
             "Category": document.getElementById('issCat').value, 
             "Item Description": document.getElementById('issItem').value, 
             "Lot No.": document.getElementById('issLotNo').value === "UNSELECTED" ? "" : "'" + document.getElementById('issLotNo').value,
-            "Qty (KG)": document.getElementById('issQty').value, 
+            "Qty (KG)": issQty, 
             "Bags/Pellets": document.getElementById('issBales').value, 
             "Cones": document.getElementById('issCones').value, 
             "Rate": document.getElementById('issRate').value, 
