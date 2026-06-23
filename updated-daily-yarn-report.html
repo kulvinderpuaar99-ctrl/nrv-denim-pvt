@@ -123,7 +123,7 @@
 <body onload="initReport()">
 
 <div class="container">
-    <a href="index.html" class="btn-home-nav no-print">🏡 Return Home</a>
+    <a href="index.html" class="btn-home-nav no-print">🏠 Return Home</a>
     
     <div class="header-section">
         <h1 class="company-name">NRV DENIM PRIVATE LIMITED</h1>
@@ -292,16 +292,19 @@
                 const qty = parseFloat(r["Qty (KG)"] || 0);
                 const item = (r["Item Description"] || "").trim().toUpperCase();
                 const cat = (r["Category"] || "").trim().toUpperCase();
+                const supplier = (r["Supplier Name"] || "").trim().toUpperCase();
                 
                 if(item === "RECYCLED FIBER") {
                     dailyData[d].rm_rf_rec += qty;
                 }
                 
-                // Logic added to find OE Plant Waste and OE Dust from the RAW_MATERIAL_REC tab
-                if(cat === "OE PLANT WASTE") {
-                    dailyData[d].yn_prd_wst += qty;
-                } else if(cat === "OE DUST") {
-                    dailyData[d].yn_prd_dst += qty;
+                // Logic updated to find OE Plant Waste and OE Dust from the RAW_MATERIAL_REC tab
+                if(supplier.includes("UNIT-3") && cat === "PLANT WASTE") {
+                    if (item !== "MICRO DUST") {
+                        dailyData[d].yn_prd_wst += qty;
+                    } else if (item === "MICRO DUST") {
+                        dailyData[d].yn_prd_dst += qty;
+                    }
                 }
             });
 
