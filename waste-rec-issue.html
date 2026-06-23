@@ -175,28 +175,38 @@
         <h2 style="border-left-color: #27ae60;">Raw Material Receipt (GRN)</h2>
         <form id="rawRecForm">
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 20px;">
-                <div class="form-group"><label>Date</label><input type="date" id="recDate"></div>
-                <div class="form-group"><label>Supplier Name</label><input type="text" id="recSupplier"></div>
+                <div class="form-group"><label>Date <span style="color:red">*</span></label><input type="date" id="recDate"></div>
+                
+                <div class="form-group">
+                    <label>Supplier Name <span style="color:red">*</span></label>
+                    <input type="text" id="recSupplier" list="supplierOptions" placeholder="Type or select...">
+                    <datalist id="supplierOptions">
+                        <option value="UNIT-1"></option>
+                        <option value="UNIT-2"></option>
+                        <option value="UNIT-3"></option>
+                        <option value="FRP PLANT"></option>
+                    </datalist>
+                </div>
+
                 <div class="form-group"><label>Inv. Number</label><input type="text" id="recGatePass"></div>
                 <div class="form-group">
-                    <label>Category</label>
+                    <label>Category <span style="color:red">*</span></label>
                     <select id="recCat" onchange="fetchRecItemsByCategory()">
                         <option value="">Select Category</option>
                         <option value="Market Purchase Waste">Market Purchase Waste</option>
                         <option value="Plant Waste">Plant Waste</option>
-                        <option value="OE Plant Waste">OE Plant Waste</option>
+                        
                         <option value="Fiber Recycling Plant">Fiber Recycling Plant</option>
-                        <option value="OE Plant Yarn">OE Plant Yarn</option>
                         
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Item Description</label>
+                    <label>Item Description <span style="color:red">*</span></label>
                     <input type="text" id="recItem" list="recItemsList" placeholder="Type or select...">
                     <datalist id="recItemsList"></datalist>
                 </div>
-                <div class="form-group"><label>Qty (KG)</label><input type="number" id="recQty" step="0.01" oninput="calculateRec()"></div>
-                <div class="form-group"><label>Bales</label><input type="number" id="recBales"></div>
+                <div class="form-group"><label>Qty (KG) <span style="color:red">*</span></label><input type="number" id="recQty" step="0.01" oninput="calculateRec()"></div>
+                <div class="form-group"><label>Bales <span style="color:red">*</span></label><input type="number" id="recBales"></div>
                 <div class="form-group"><label>Rate</label><input type="number" id="recRate" step="0.01" oninput="calculateRec()"></div>
                 <div class="form-group"><label>Total Amount</label><input type="number" id="recAmount" readonly style="background:#f1f2f6;"></div>
                 <div class="form-group"><label>Remarks</label><input type="text" id="recRemarks"></div>
@@ -248,9 +258,9 @@
                         <option value="">Select Category</option>
                         <option value="Market Purchase Waste">Market Purchase Waste</option>
                         <option value="Plant Waste">Plant Waste</option>
-                        <option value="OE Plant Waste">OE Plant Waste</option>
+                        
                         <option value="Fiber Recycling Plant">Fiber Recycling Plant</option>
-                        <option value="OE Plant Yarn">OE Plant Yarn</option>
+                        
                                             </select>
                 </div>
                 <div class="form-group"><label>Item Description</label><select id="issItem" onchange="fetchItemStats()"><option value="">Select Item</option></select></div>
@@ -504,15 +514,28 @@
     }
 
     function submitRawRec() {
+        const dateVal = document.getElementById('recDate').value;
+        const supplierVal = document.getElementById('recSupplier').value;
+        const categoryVal = document.getElementById('recCat').value;
+        const itemVal = document.getElementById('recItem').value;
+        const qtyVal = document.getElementById('recQty').value;
+        const balesVal = document.getElementById('recBales').value;
+
+        // Validation for mandatory fields
+        if (!dateVal || !supplierVal || !categoryVal || !itemVal || !qtyVal || !balesVal) {
+            alert("Please fill out all required fields:\n- Date\n- Supplier Name\n- Category\n- Item Description\n- Qty (KG)\n- Bales");
+            return;
+        }
+
         const d = { 
             "Department": "RAW_MATERIAL_REC", 
-            "Date": document.getElementById('recDate').value, 
-            "Supplier Name": document.getElementById('recSupplier').value, 
+            "Date": dateVal, 
+            "Supplier Name": supplierVal, 
             "Gate Pass / Invoice": document.getElementById('recGatePass').value, 
-            "Category": document.getElementById('recCat').value, 
-            "Item Description": document.getElementById('recItem').value, 
-            "Qty (KG)": document.getElementById('recQty').value, 
-            "Bales": document.getElementById('recBales').value, 
+            "Category": categoryVal, 
+            "Item Description": itemVal, 
+            "Qty (KG)": qtyVal, 
+            "Bales": balesVal, 
             "Rate": document.getElementById('recRate').value, 
             "Total Amount": document.getElementById('recAmount').value, 
             "Remarks": document.getElementById('recRemarks').value, 
