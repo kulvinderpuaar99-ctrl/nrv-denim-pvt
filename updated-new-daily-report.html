@@ -123,7 +123,7 @@
 <body onload="initReport()">
 
 <div class="container">
-    <a href="index.html" class="btn-home-nav no-print">🏡 Return Home</a>
+    <a href="index.html" class="btn-home-nav no-print">升 Return Home</a>
     
     <div class="header-section">
         <h1 class="company-name">NRV DENIM PRIVATE LIMITED</h1>
@@ -137,9 +137,9 @@
                 <input type="month" id="reportMonth" onchange="loadReport()">
             </div>
             <div class="btn-group">
-                <button class="action-btn btn-refresh" onclick="loadReport()">🔄 Refresh</button>
-                <button class="action-btn btn-excel" onclick="exportToExcel()">📊 Excel</button>
-                <button class="action-btn btn-print" onclick="window.print()">🖨️ Print</button>
+                <button class="action-btn btn-refresh" onclick="loadReport()">売 Refresh</button>
+                <button class="action-btn btn-excel" onclick="exportToExcel()">投 Excel</button>
+                <button class="action-btn btn-print" onclick="window.print()">蜜ｸPrint</button>
             </div>
         </div>
 
@@ -235,7 +235,12 @@
                 const item = (r["Item Description"] || "").trim().toUpperCase();
                 
                 if(cat === "MARKET PURCHASE WASTE") dailyData[d].mr_mkt += qty;
-                else if(cat === "PLANT WASTE" || cat === "OE PLANT WASTE") dailyData[d].mr_plt += qty;
+                else if(cat === "PLANT WASTE" || cat === "OE PLANT WASTE") {
+                    // Added condition to exclude Micro Dust from Plant Waste
+                    if(item !== "MICRO DUST") {
+                        dailyData[d].mr_plt += qty;
+                    }
+                }
                 else if(cat === "FIBER RECYCLING PLANT") {
                     if(item === "RECYCLED FIBER") dailyData[d].prd_fib += qty;
                     else if(item === "GUTTER") dailyData[d].prd_gut += qty;
@@ -253,7 +258,12 @@
                 const item = (i["Item Description"] || "").trim().toUpperCase();
                 
                 if(cat === "MARKET PURCHASE WASTE") dailyData[d].mi_mkt += qty;
-                else if(cat === "PLANT WASTE") dailyData[d].mi_plt += qty;
+                else if(cat === "PLANT WASTE") {
+                    // Added condition to exclude Micro Dust from Plant Waste
+                    if(item !== "MICRO DUST") {
+                        dailyData[d].mi_plt += qty;
+                    }
+                }
                 else if(cat === "FIBER RECYCLING PLANT") {
                     if(item === "RECYCLED FIBER") dailyData[d].iss_fib += qty;
                     else if(item === "GUTTER") dailyData[d].sale_gut += qty;
