@@ -124,7 +124,7 @@
 <body onload="initReport()">
 
 <div class="container">
-    <a href="index.html" class="btn-home-nav no-print">升 Return Home</a>
+    <a href="index.html" class="btn-home-nav no-print">歸 Return Home</a>
     
     <div class="header-section">
         <h1 class="company-name">NRV DENIM PRIVATE LIMITED</h1>
@@ -138,9 +138,9 @@
                 <input type="month" id="reportMonth" onchange="loadReport()">
             </div>
             <div class="btn-group">
-                <button class="action-btn btn-refresh" onclick="loadReport()">売 Refresh</button>
-                <button class="action-btn btn-excel" onclick="exportToExcel()">投 Excel</button>
-                <button class="action-btn btn-print" onclick="window.print()">蜜ｸPrint</button>
+                <button class="action-btn btn-refresh" onclick="loadReport()">歸 Refresh</button>
+                <button class="action-btn btn-excel" onclick="exportToExcel()">歸 Excel</button>
+                <button class="action-btn btn-print" onclick="window.print()">歸 Print</button>
             </div>
         </div>
 
@@ -165,24 +165,24 @@
                     <th rowspan="2">Date</th>
                     <th colspan="4" class="grp-rw-rec head-rw-rec">Raw Waste Receipt</th>
                     <th colspan="4" class="grp-rw-iss head-rw-iss">Issue Raw Waste</th>
-                    <th colspan="4" class="grp-rc-prd head-rc-prd">Prod. Waste Recycle Plant</th>
-                    <th colspan="4" class="grp-rc-iss head-rc-iss">Issue & Sale Recycle Fiber</th>
+                    <th colspan="5" class="grp-rc-prd head-rc-prd">Prod. Waste Recycle Plant</th>
+                    <th colspan="5" class="grp-rc-iss head-rc-iss">Issue & Sale Recycle Fiber</th>
                     <th colspan="1" class="grp-yrn head-yrn">Yarn Receipt</th>
                     <th colspan="1" class="grp-yrn head-yrn">Yarn Issue</th>
                     <th colspan="4" class="grp-rw-stk head-rw-stk">Stock Raw Waste (Total)</th>
                     <th colspan="1" class="grp-yrn head-yrn">Stock Yarn</th>
-                    <th colspan="4" class="grp-rc-stk head-rc-stk">Stock Recycled Fiber (Total)</th>
+                    <th colspan="5" class="grp-rc-stk head-rc-stk">Stock Recycled Fiber (Total)</th>
                 </tr>
                 <tr>
                     <th class="grp-rw-rec head-rw-rec">Mkt Purchase</th><th class="grp-rw-rec head-rw-rec">Plant Waste</th><th class="grp-rw-rec head-rw-rec">Market Flat</th><th class="grp-rw-rec head-rw-rec">Total</th>
                     <th class="grp-rw-iss head-rw-iss">Mkt Purchase</th><th class="grp-rw-iss head-rw-iss">Plant Waste</th><th class="grp-rw-iss head-rw-iss">Market Flat</th><th class="grp-rw-iss head-rw-iss">Total</th>
-                    <th class="grp-rc-prd head-rc-prd">Recycled Fiber</th><th class="grp-rc-prd head-rc-prd">Gutter Waste</th><th class="grp-rc-prd head-rc-prd">Micro Dust</th><th class="grp-rc-prd head-rc-prd">Cotton</th>
-                    <th class="grp-rc-iss head-rc-iss">Issue Fiber</th><th class="grp-rc-iss head-rc-iss">Sale Gutter</th><th class="grp-rc-iss head-rc-iss">Micro Dust</th><th class="grp-rc-iss head-rc-iss">Cotton</th>
+                    <th class="grp-rc-prd head-rc-prd">Recycled Fiber</th><th class="grp-rc-prd head-rc-prd">Kanty</th><th class="grp-rc-prd head-rc-prd">Kanty Black</th><th class="grp-rc-prd head-rc-prd">Micro Dust</th><th class="grp-rc-prd head-rc-prd">Cotton</th>
+                    <th class="grp-rc-iss head-rc-iss">Issue Fiber</th><th class="grp-rc-iss head-rc-iss">Sale Kanty</th><th class="grp-rc-iss head-rc-iss">Sale Kanty Black</th><th class="grp-rc-iss head-rc-iss">Micro Dust</th><th class="grp-rc-iss head-rc-iss">Cotton</th>
                     <th class="grp-yrn head-yrn">OE U-3 Yarn</th>
                     <th class="grp-yrn head-yrn">OE U-3 Yarn</th>
                     <th class="grp-rw-stk head-rw-stk">Mkt Purchase</th><th class="grp-rw-stk head-rw-stk">Plant Waste</th><th class="grp-rw-stk head-rw-stk">Market Flat</th><th class="grp-rw-stk head-rw-stk">Total</th>
                     <th class="grp-yrn head-yrn">OE U-3 Yarn</th>
-                    <th class="grp-rc-stk head-rc-stk">Recycled Fiber</th><th class="grp-rc-stk head-rc-stk">Gutter Waste</th><th class="grp-rc-stk head-rc-stk">Micro Dust</th><th class="grp-rc-stk head-rc-stk">Cotton</th>
+                    <th class="grp-rc-stk head-rc-stk">Recycled Fiber</th><th class="grp-rc-stk head-rc-stk">Kanty</th><th class="grp-rc-stk head-rc-stk">Kanty Black</th><th class="grp-rc-stk head-rc-stk">Micro Dust</th><th class="grp-rc-stk head-rc-stk">Cotton</th>
                 </tr>
             </thead>
             <tbody id="reportDataBody"></tbody>
@@ -210,13 +210,21 @@
         loadReport();
     }
 
+    // Helper function to format internal date keys into dd/mm/yyyy style
+    function formatDateToDMY(dateStr) {
+        if (!dateStr) return '';
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return dateStr;
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
     async function loadReport() {
         const tbody = document.getElementById('reportDataBody');
         const tfoot = document.getElementById('reportFooter');
         const selectedMonth = document.getElementById('reportMonth').value;
         if(!selectedMonth) return;
         
-        tbody.innerHTML = "<tr><td colspan='28'>Syncing with server...</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='31'>Syncing with server...</td></tr>";
 
         try {
             const [respRec, respIss, respYarnRec, respYarnIss, respCotRec, respCotIss] = await Promise.all([
@@ -239,7 +247,8 @@
             const ensureDate = (d) => {
                 if(!dailyData[d]) dailyData[d] = { 
                     mr_mkt:0, mr_plt:0, mr_mkt_flat:0, mi_mkt:0, mi_plt:0, mi_mkt_flat:0,
-                    prd_fib:0, prd_gut:0, prd_md:0, prd_cotton:0, iss_fib:0, sale_gut:0, iss_md:0, iss_cotton:0,
+                    prd_fib:0, prd_gut:0, prd_kb:0, prd_md:0, prd_cotton:0, 
+                    iss_fib:0, sale_gut:0, sale_kb:0, iss_md:0, iss_cotton:0,
                     yr_u3:0, yi_u3:0
                 };
             };
@@ -257,7 +266,8 @@
                 else if(cat === "PLANT WASTE" || cat === "OE PLANT WASTE") dailyData[d].mr_plt += qty;
                 else if(cat === "FIBER RECYCLING PLANT") {
                     if(item === "RECYCLED FIBER") dailyData[d].prd_fib += qty;
-                    else if(item === "GUTTER") dailyData[d].prd_gut += qty;
+                    else if(item === "KANTY" || item === "GUTTER") dailyData[d].prd_gut += qty;
+                    else if(item === "KANTY BLACK") dailyData[d].prd_kb += qty;
                     else if(item === "MICRO DUST") dailyData[d].prd_md += qty;
                 }
                 else if(cat === "OE DUST") {
@@ -300,7 +310,8 @@
                 else if(cat === "PLANT WASTE") dailyData[d].mi_plt += qty;
                 else if(cat === "FIBER RECYCLING PLANT") {
                     if(item === "RECYCLED FIBER") dailyData[d].iss_fib += qty;
-                    else if(item === "GUTTER") dailyData[d].sale_gut += qty;
+                    else if(item === "KANTY" || item === "GUTTER") dailyData[d].sale_gut += qty;
+                    else if(item === "KANTY BLACK") dailyData[d].sale_kb += qty;
                     else if(item === "MICRO DUST") dailyData[d].iss_md += qty;
                 }
                 else if(cat === "OE DUST") {
@@ -331,11 +342,11 @@
             });
 
             tbody.innerHTML = "";
-            let runMkt = 0, runPlt = 0, runMktFlat = 0, runFib = 0, runGut = 0, runMD = 0, runCotton = 0, runU3Yarn = 0;
+            let runMkt = 0, runPlt = 0, runMktFlat = 0, runFib = 0, runGut = 0, runKB = 0, runMD = 0, runCotton = 0, runU3Yarn = 0;
             
             let sum = { 
                 mrM:0, mrP:0, mrMF:0, miM:0, miP:0, miMF:0,
-                pF:0, pG:0, pMD:0, pC:0, iF:0, sG:0, iMD:0, iC:0,
+                pF:0, pG:0, pKB:0, pMD:0, pC:0, iF:0, sG:0, sKB:0, iMD:0, iC:0,
                 yrU3:0, yiU3:0
             };
 
@@ -351,14 +362,14 @@
                         <td class="grp-rw-rec">-</td><td class="grp-rw-rec">-</td><td class="grp-rw-rec">-</td><td class="grp-rw-rec">-</td>
                         <td class="grp-rw-iss">-</td><td class="grp-rw-iss">-</td><td class="grp-rw-iss">-</td><td class="grp-rw-iss">-</td>
                         
-                        <td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td>
-                        <td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td>
+                        <td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td>
+                        <td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td>
                         <td class="grp-yrn">-</td>
                         <td class="grp-yrn">-</td>
                         
                         <td class="grp-rw-stk">${runMkt.toFixed(0)}</td><td class="grp-rw-stk">${runPlt.toFixed(0)}</td><td class="grp-rw-stk">${runMktFlat.toFixed(0)}</td><td class="grp-rw-stk"><b>${(runMkt+runPlt+runMktFlat).toFixed(0)}</b></td>
                         <td class="grp-yrn">${runU3Yarn.toFixed(0)}</td>
-                        <td class="grp-rc-stk">${runFib.toFixed(0)}</td><td class="grp-rc-stk">${runGut.toFixed(0)}</td><td class="grp-rc-stk">${runMD.toFixed(0)}</td><td class="grp-rc-stk">${runCotton.toFixed(0)}</td>
+                        <td class="grp-rc-stk">${runFib.toFixed(0)}</td><td class="grp-rc-stk">${runGut.toFixed(0)}</td><td class="grp-rc-stk">${runKB.toFixed(0)}</td><td class="grp-rc-stk">${runMD.toFixed(0)}</td><td class="grp-rc-stk">${runCotton.toFixed(0)}</td>
                     </tr>`;
                     hasPrintedOpening = true;
                 }
@@ -369,6 +380,7 @@
                 runMktFlat += (day.mr_mkt_flat - day.mi_mkt_flat);
                 runFib += (day.prd_fib - day.iss_fib);
                 runGut += (day.prd_gut - day.sale_gut);
+                runKB += (day.prd_kb - day.sale_kb);
                 runMD += (day.prd_md - day.iss_md);
                 runCotton += (day.prd_cotton - day.iss_cotton);
                 runU3Yarn += (day.yr_u3 - day.yi_u3);
@@ -376,26 +388,26 @@
                 if(date.startsWith(selectedMonth)) {
                     sum.mrM += day.mr_mkt; sum.mrP += day.mr_plt; sum.mrMF += day.mr_mkt_flat; 
                     sum.miM += day.mi_mkt; sum.miP += day.mi_plt; sum.miMF += day.mi_mkt_flat;
-                    sum.pF += day.prd_fib; sum.pG += day.prd_gut; sum.pMD += day.prd_md; sum.pC += day.prd_cotton;
-                    sum.iF += day.iss_fib; sum.sG += day.sale_gut; sum.iMD += day.iss_md; sum.iC += day.iss_cotton;
+                    sum.pF += day.prd_fib; sum.pG += day.prd_gut; sum.pKB += day.prd_kb; sum.pMD += day.prd_md; sum.pC += day.prd_cotton;
+                    sum.iF += day.iss_fib; sum.sG += day.sale_gut; sum.sKB += day.sale_kb; sum.iMD += day.iss_md; sum.iC += day.iss_cotton;
                     sum.yrU3 += day.yr_u3; sum.yiU3 += day.yi_u3;
 
                     let recTotal = day.mr_mkt + day.mr_plt + day.mr_mkt_flat;
                     let issueTotal = day.mi_mkt + day.mi_plt + day.mi_mkt_flat;
 
                     tbody.innerHTML += `<tr>
-                        <td>${date}</td>
+                        <td>${formatDateToDMY(date)}</td>
                         <td class="grp-rw-rec">${day.mr_mkt.toFixed(0)}</td><td class="grp-rw-rec">${day.mr_plt.toFixed(0)}</td><td class="grp-rw-rec">${day.mr_mkt_flat.toFixed(0)}</td><td class="grp-rw-rec"><b>${recTotal.toFixed(0)}</b></td>
                         <td class="grp-rw-iss">${day.mi_mkt.toFixed(0)}</td><td class="grp-rw-iss">${day.mi_plt.toFixed(0)}</td><td class="grp-rw-iss">${day.mi_mkt_flat.toFixed(0)}</td><td class="grp-rw-iss"><b>${issueTotal.toFixed(0)}</b></td>
                         
-                        <td class="grp-rc-prd">${day.prd_fib.toFixed(0)}</td><td class="grp-rc-prd">${day.prd_gut.toFixed(0)}</td><td class="grp-rc-prd">${day.prd_md.toFixed(0)}</td><td class="grp-rc-prd">${day.prd_cotton.toFixed(0)}</td>
-                        <td class="grp-rc-iss">${day.iss_fib.toFixed(0)}</td><td class="grp-rc-iss">${day.sale_gut.toFixed(0)}</td><td class="grp-rc-iss">${day.iss_md.toFixed(0)}</td><td class="grp-rc-iss">${day.iss_cotton.toFixed(0)}</td>
+                        <td class="grp-rc-prd">${day.prd_fib.toFixed(0)}</td><td class="grp-rc-prd">${day.prd_gut.toFixed(0)}</td><td class="grp-rc-prd">${day.prd_kb.toFixed(0)}</td><td class="grp-rc-prd">${day.prd_md.toFixed(0)}</td><td class="grp-rc-prd">${day.prd_cotton.toFixed(0)}</td>
+                        <td class="grp-rc-iss">${day.iss_fib.toFixed(0)}</td><td class="grp-rc-iss">${day.sale_gut.toFixed(0)}</td><td class="grp-rc-iss">${day.sale_kb.toFixed(0)}</td><td class="grp-rc-iss">${day.iss_md.toFixed(0)}</td><td class="grp-rc-iss">${day.iss_cotton.toFixed(0)}</td>
                         <td class="grp-yrn">${day.yr_u3.toFixed(0)}</td>
                         <td class="grp-yrn">${day.yi_u3.toFixed(0)}</td>
                         
                         <td class="grp-rw-stk">${runMkt.toFixed(0)}</td><td class="grp-rw-stk">${runPlt.toFixed(0)}</td><td class="grp-rw-stk">${runMktFlat.toFixed(0)}</td><td class="grp-rw-stk"><b>${(runMkt+runPlt+runMktFlat).toFixed(0)}</b></td>
                         <td class="grp-yrn">${runU3Yarn.toFixed(0)}</td>
-                        <td class="grp-rc-stk">${runFib.toFixed(0)}</td><td class="grp-rc-stk">${runGut.toFixed(0)}</td><td class="grp-rc-stk">${runMD.toFixed(0)}</td><td class="grp-rc-stk">${runCotton.toFixed(0)}</td>
+                        <td class="grp-rc-stk">${runFib.toFixed(0)}</td><td class="grp-rc-stk">${runGut.toFixed(0)}</td><td class="grp-rc-stk">${runKB.toFixed(0)}</td><td class="grp-rc-stk">${runMD.toFixed(0)}</td><td class="grp-rc-stk">${runCotton.toFixed(0)}</td>
                     </tr>`;
                 }
             });
@@ -406,14 +418,14 @@
                     <td class="grp-rw-rec">-</td><td class="grp-rw-rec">-</td><td class="grp-rw-rec">-</td><td class="grp-rw-rec">-</td>
                     <td class="grp-rw-iss">-</td><td class="grp-rw-iss">-</td><td class="grp-rw-iss">-</td><td class="grp-rw-iss">-</td>
                     
-                    <td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td>
-                    <td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td>
+                    <td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td>
+                    <td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td>
                     <td class="grp-yrn">-</td>
                     <td class="grp-yrn">-</td>
                     
                     <td class="grp-rw-stk">${runMkt.toFixed(0)}</td><td class="grp-rw-stk">${runPlt.toFixed(0)}</td><td class="grp-rw-stk">${runMktFlat.toFixed(0)}</td><td class="grp-rw-stk"><b>${(runMkt+runPlt+runMktFlat).toFixed(0)}</b></td>
                     <td class="grp-yrn">${runU3Yarn.toFixed(0)}</td>
-                    <td class="grp-rc-stk">${runFib.toFixed(0)}</td><td class="grp-rc-stk">${runGut.toFixed(0)}</td><td class="grp-rc-stk">${runMD.toFixed(0)}</td><td class="grp-rc-stk">${runCotton.toFixed(0)}</td>
+                    <td class="grp-rc-stk">${runFib.toFixed(0)}</td><td class="grp-rc-stk">${runGut.toFixed(0)}</td><td class="grp-rc-stk">${runKB.toFixed(0)}</td><td class="grp-rc-stk">${runMD.toFixed(0)}</td><td class="grp-rc-stk">${runCotton.toFixed(0)}</td>
                 </tr>`;
             }
 
@@ -426,15 +438,15 @@
                     <td class="grp-rw-rec">${sum.mrM.toFixed(0)}</td><td class="grp-rw-rec">${sum.mrP.toFixed(0)}</td><td class="grp-rw-rec">${sum.mrMF.toFixed(0)}</td><td class="grp-rw-rec">${sumRecTotal.toFixed(0)}</td>
                     <td class="grp-rw-iss">${sum.miM.toFixed(0)}</td><td class="grp-rw-iss">${sum.miP.toFixed(0)}</td><td class="grp-rw-iss">${sum.miMF.toFixed(0)}</td><td class="grp-rw-iss">${sumIssueTotal.toFixed(0)}</td>
                     
-                    <td class="grp-rc-prd">${sum.pF.toFixed(0)}</td><td class="grp-rc-prd">${sum.pG.toFixed(0)}</td><td class="grp-rc-prd">${sum.pMD.toFixed(0)}</td><td class="grp-rc-prd">${sum.pC.toFixed(0)}</td>
-                    <td class="grp-rc-iss">${sum.iF.toFixed(0)}</td><td class="grp-rc-iss">${sum.sG.toFixed(0)}</td><td class="grp-rc-iss">${sum.iMD.toFixed(0)}</td><td class="grp-rc-iss">${sum.iC.toFixed(0)}</td>
+                    <td class="grp-rc-prd">${sum.pF.toFixed(0)}</td><td class="grp-rc-prd">${sum.pG.toFixed(0)}</td><td class="grp-rc-prd">${sum.pKB.toFixed(0)}</td><td class="grp-rc-prd">${sum.pMD.toFixed(0)}</td><td class="grp-rc-prd">${sum.pC.toFixed(0)}</td>
+                    <td class="grp-rc-iss">${sum.iF.toFixed(0)}</td><td class="grp-rc-iss">${sum.sG.toFixed(0)}</td><td class="grp-rc-iss">${sum.sKB.toFixed(0)}</td><td class="grp-rc-iss">${sum.iMD.toFixed(0)}</td><td class="grp-rc-iss">${sum.iC.toFixed(0)}</td>
                     <td class="grp-yrn">${sum.yrU3.toFixed(0)}</td>
                     <td class="grp-yrn">${sum.yiU3.toFixed(0)}</td>
                     
-                    <td colspan="9" style="background:#f2f2f2; text-align:center;">STOCK EXCLUDED FROM TOTAL</td>
+                    <td colspan="11" style="background:#f2f2f2; text-align:center;">STOCK EXCLUDED FROM TOTAL</td>
                 </tr>`;
             }
-        } catch(e) { tbody.innerHTML = "<tr><td colspan='28' style='color:red;'>Error loading data.</td></tr>"; }
+        } catch(e) { tbody.innerHTML = "<tr><td colspan='31' style='color:red;'>Error loading data.</td></tr>"; }
     }
 
     function exportToExcel() {
