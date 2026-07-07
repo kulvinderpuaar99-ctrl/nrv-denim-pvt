@@ -255,42 +255,60 @@
     <div class="container">
         <h2 style="border-left-color: #8e44ad;">Raw Material Issue</h2>
         <form id="rawIssueForm">
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 20px;">
-                <div class="form-group"><label>Date</label><input type="date" id="issDate"></div>
-                <div class="form-group"><label>Issue Slip No.</label><input type="text" id="issSlip"></div>
+            <!-- Header Section -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 20px; border-bottom: 2px solid #eee;">
+                <div class="form-group"><label>Date <span style="color:red">*</span></label><input type="date" id="issDate"></div>
+                <div class="form-group"><label>Issue Slip No. <span style="color:red">*</span></label><input type="text" id="issSlip"></div>
                 <div class="form-group">
-                    <label>Dept</label>
+                    <label>Dept <span style="color:red">*</span></label>
                     <select id="issDept">
                         <option value="">Select Dept</option>
-                        
                         <option value="OE Plant Unit no 3">OE Plant Unit no 3</option>
                         <option value="Fiber Recycling Plant">Fiber Recycling Plant</option>
                         <option value="OE Plant Unit no 1">OE Plant Unit no 1</option>
                         <option value="Sale">Sale</option>
-                        
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Category</label>
-                    <select id="issCat" onchange="fetchItemsByCategory()">
-                        <option value="">Select Category</option>
-                        <option value="Market Purchase Waste">Market Purchase Waste</option>
-                        <option value="Plant Waste">Plant Waste</option>
-                        
-                        <option value="Fiber Recycling Plant">Fiber Recycling Plant</option>
-                        
-                                            </select>
-                </div>
-                <div class="form-group"><label>Item Description</label><select id="issItem" onchange="fetchItemStats()"><option value="">Select Item</option></select></div>
-                <div class="form-group"><label style="color: #1565c0;">Available (KG)</label><input type="number" id="issStockBal" readonly style="background:#e3f2fd; font-weight:bold;"></div>
-                <div class="form-group"><label>Issue Qty (KG)</label><input type="number" id="issQty" step="0.01" oninput="calculateIss()"></div>
-                <div class="form-group"><label>Bales</label><input type="number" id="issBales"></div>
-                <div class="form-group"><label>Rate (Avg)</label><input type="number" id="issRate" step="0.01" readonly style="background:#f1f2f6;"></div>
-                <div class="form-group"><label>Total Amount</label><input type="number" id="issAmount" readonly style="background:#f1f2f6;"></div>
                 <div class="form-group"><label>Remarks</label><input type="text" id="issRemarks"></div>
             </div>
-            <div style="text-align: right; padding: 20px;"><button type="button" class="btn-submit" onclick="submitRawIssue()" style="background:#8e44ad">CONFIRM ISSUE</button></div>
+
+            <!-- Multi-Item Entry Section -->
+            <div style="padding: 20px; background: #fcfcfc;">
+                <h3 style="margin-top: 0; color: #2c3e50; font-size: 14px; text-transform: uppercase;">Add Items</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; align-items: end; margin-bottom: 15px;">
+                    <div class="form-group">
+                        <label>Category <span style="color:red">*</span></label>
+                        <select id="tempIssCat" onchange="fetchItemsByCategory()">
+                            <option value="">Select Category</option>
+                            <option value="Market Purchase Waste">Market Purchase Waste</option>
+                            <option value="Plant Waste">Plant Waste</option>
+                            <option value="Fiber Recycling Plant">Fiber Recycling Plant</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Item Description <span style="color:red">*</span></label><select id="tempIssItem" onchange="fetchItemStats()"><option value="">Select Item</option></select></div>
+                    <div class="form-group"><label style="color: #1565c0;">Available (KG)</label><input type="number" id="tempIssStockBal" readonly style="background:#e3f2fd; font-weight:bold;"></div>
+                    <div class="form-group"><label>Issue Qty (KG) <span style="color:red">*</span></label><input type="number" id="tempIssQty" step="0.01" oninput="calculateIss()"></div>
+                    <div class="form-group"><label>Bales <span style="color:red">*</span></label><input type="number" id="tempIssBales"></div>
+                    <div class="form-group"><label>Rate (Avg)</label><input type="number" id="tempIssRate" step="0.01" readonly style="background:#f1f2f6;"></div>
+                    <div class="form-group"><label>Amount</label><input type="number" id="tempIssAmount" readonly style="background:#f1f2f6;"></div>
+                    <button type="button" class="btn-submit" style="margin-top: 0; padding: 9px 15px; background: #8e44ad;" onclick="addIssueLineItem()">+ ADD</button>
+                </div>
+
+                <table id="issueLineItemTable">
+                    <thead>
+                        <tr><th>Category</th><th>Item Description</th><th>Qty (KG)</th><th>Bales</th><th>Rate</th><th>Amount</th><th style="text-align: center;">Action</th></tr>
+                    </thead>
+                    <tbody id="issueLineItemBody">
+                        <tr><td colspan="7" style="text-align: center; color: #999;">No items added yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="text-align: right; padding: 20px; border-top: 2px solid #eee;">
+                <button type="button" class="btn-submit" onclick="submitMultiIssue()" style="background:#8e44ad">CONFIRM ISSUE (ALL ITEMS)</button>
+            </div>
         </form>
+
         <div class="history-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <h3>Recent Issues</h3>
@@ -322,9 +340,10 @@
     let currentUser = "";
     let cachedReceipts = [];
     let cachedIssues = [];
-    let cachedArticles = []; // NEW: Cache for Article Master data
+    let cachedArticles = [];
     let globalStockMap = {};
-    let lineItems = []; // Array to store multiple items for receipts
+    let lineItems = []; 
+    let issueLineItems = []; // Array for multiple issue items
 
     window.onload = () => { 
         document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7); 
@@ -350,11 +369,19 @@
             document.getElementById('recDate').valueAsDate = new Date();
             loadHistory('RAW_MATERIAL_REC', 'recHistoryBody');
             refreshRecCache();
-            refreshArticleCache(); // NEW: Fetch the Article Master when opening Receipt App
+            refreshArticleCache(); 
         }
         if(appId === 'rawIssue') {
             document.getElementById('issDate').valueAsDate = new Date();
             loadHistory('RAW_MATERIAL_ISSUE', 'issHistoryBody');
+            
+            // Ensures lists are fully updated when user opens Issue app
+            const [rR, rI] = await Promise.all([
+                fetch(`${API_URL}?Department=RAW_MATERIAL_REC&t=${Date.now()}`), 
+                fetch(`${API_URL}?Department=RAW_MATERIAL_ISSUE&t=${Date.now()}`)
+            ]);
+            cachedReceipts = await rR.json(); 
+            cachedIssues = await rI.json();
         }
         if(appId === 'balanceStock') loadBalanceStock();
     }
@@ -366,7 +393,6 @@
         } catch(e){}
     }
 
-    // NEW FUNCTION: Fetch the Article Master data
     async function refreshArticleCache() {
         try {
             const res = await fetch(`${API_URL}?Department=ARTICLE_MASTER&t=${Date.now()}`);
@@ -376,15 +402,12 @@
         }
     }
 
-    // MODIFIED FUNCTION: Fetch Items by Category from ARTICLE_MASTER instead of Receipts
     function fetchRecItemsByCategory() {
         const cat = document.getElementById('recCat').value;
         const list = document.getElementById('recItemsList');
         list.innerHTML = "";
         
-        // Filter from the Article Master sheet
         const items = [...new Set(cachedArticles.filter(r => {
-            // Check headers mapping correctly to user's specified column names, handling potential double spaces
             const rowCat = r["Raw Material Category"] || r["Raw Material  Category"] || "";
             return rowCat.trim().toUpperCase() === cat.trim().toUpperCase();
         }).map(r => r["Article"] || r["Article"] || ""))];
@@ -406,7 +429,6 @@
                     const d = new Date(row["Date"]);
                     dateStr = d.toLocaleDateString('en-GB'); 
                     
-                    // FIXED: Generate YYYY-MM-DD manually to avoid UTC shift
                     const y = d.getFullYear();
                     const m = String(d.getMonth() + 1).padStart(2, '0');
                     const day = String(d.getDate()).padStart(2, '0');
@@ -499,7 +521,6 @@
         document.getElementById('stockTableFoot').innerHTML = `<tr style="background:#2c3e50; color:white; font-weight:bold;"><td colspan="2">TOTAL:</td><td>${fF(gOK,gOB,gOA)}</td><td>${fF(gRK,gRB,gRA)}</td><td>${fF(gIK,gIB,gIA)}</td><td>${fF(gCK,gCB,gCA)}</td><td></td></tr>`;
     }
 
-    // New calculations for Multi-Item Receipt form
     function calculateTempAmount() {
         const q = parseFloat(document.getElementById('tempQty').value) || 0;
         const r = parseFloat(document.getElementById('tempRate').value) || 0;
@@ -521,7 +542,6 @@
         lineItems.push({ item, qty, bales, rate, amt });
         renderLineItems();
 
-        // Reset fields
         document.getElementById('tempItem').value = "";
         document.getElementById('tempQty').value = "";
         document.getElementById('tempBales').value = "";
@@ -553,39 +573,100 @@
         renderLineItems();
     }
 
-    function calculateIss() { const q = document.getElementById('issQty').value||0, r = document.getElementById('issRate').value||0; document.getElementById('issAmount').value = (q*r).toFixed(2); }
+    // ISSUE APP CALCULATIONS
+    function calculateIss() { 
+        const q = document.getElementById('tempIssQty').value || 0;
+        const r = document.getElementById('tempIssRate').value || 0; 
+        document.getElementById('tempIssAmount').value = (q * r).toFixed(2); 
+    }
 
     async function fetchItemsByCategory() {
-        const cat = document.getElementById('issCat').value, sel = document.getElementById('issItem');
-        sel.innerHTML = '<option>Loading...</option>';
-        try {
-            const [rR, rI] = await Promise.all([
-                fetch(`${API_URL}?Department=RAW_MATERIAL_REC&t=${Date.now()}`), 
-                fetch(`${API_URL}?Department=RAW_MATERIAL_ISSUE&t=${Date.now()}`)
-            ]);
-            cachedReceipts = await rR.json(); cachedIssues = await rI.json();
-            const items = [...new Set(cachedReceipts.filter(r => (r["Category"]||"").toUpperCase() === cat.toUpperCase()).map(r => r["Item Description"]))];
-            sel.innerHTML = '<option value="">Select Item</option>';
-            items.forEach(i => { if(i) sel.innerHTML += `<option value="${i}">${i}</option>`; });
-        } catch(e){}
+        const cat = document.getElementById('tempIssCat').value;
+        const sel = document.getElementById('tempIssItem');
+        
+        if (!cachedReceipts.length || !cachedIssues.length) {
+            sel.innerHTML = '<option>Loading...</option>';
+            try {
+                const [rR, rI] = await Promise.all([
+                    fetch(`${API_URL}?Department=RAW_MATERIAL_REC&t=${Date.now()}`), 
+                    fetch(`${API_URL}?Department=RAW_MATERIAL_ISSUE&t=${Date.now()}`)
+                ]);
+                cachedReceipts = await rR.json(); 
+                cachedIssues = await rI.json();
+            } catch(e){}
+        }
+        
+        const items = [...new Set(cachedReceipts.filter(r => (r["Category"]||"").toUpperCase() === cat.toUpperCase()).map(r => r["Item Description"]))];
+        sel.innerHTML = '<option value="">Select Item</option>';
+        items.forEach(i => { if(i) sel.innerHTML += `<option value="${i}">${i}</option>`; });
     }
 
     function fetchItemStats() {
-        const cat = document.getElementById('issCat').value, itm = document.getElementById('issItem').value;
+        const cat = document.getElementById('tempIssCat').value, itm = document.getElementById('tempIssItem').value;
         if(!cat || !itm) return;
         let tR=0, tQ=0, tI=0;
         cachedReceipts.filter(r => r["Category"]===cat && r["Item Description"]===itm).forEach(m => { tR+=parseFloat(m["Total Amount"]||0); tQ+=parseFloat(m["Qty (KG)"]||0); });
         cachedIssues.filter(i => i["Category"]===cat && i["Item Description"]===itm).forEach(m => { tI+=parseFloat(m["Qty (KG)"]||0); });
-        document.getElementById('issRate').value = tQ>0 ? (tR/tQ).toFixed(2) : 0;
-        document.getElementById('issStockBal').value = (tQ - tI).toFixed(2);
+        document.getElementById('tempIssRate').value = tQ>0 ? (tR/tQ).toFixed(2) : 0;
+        document.getElementById('tempIssStockBal').value = (tQ - tI).toFixed(2);
         calculateIss();
+    }
+
+    // Add multiple items for issue
+    function addIssueLineItem() {
+        const cat = document.getElementById('tempIssCat').value;
+        const item = document.getElementById('tempIssItem').value;
+        const qty = parseFloat(document.getElementById('tempIssQty').value) || 0;
+        const bales = parseFloat(document.getElementById('tempIssBales').value) || 0;
+        const rate = parseFloat(document.getElementById('tempIssRate').value) || 0;
+        const amt = parseFloat(document.getElementById('tempIssAmount').value) || 0;
+
+        if (!cat || !item || qty <= 0 || bales <= 0) {
+            alert("Please select Category, Item, and enter valid Qty and Bales.");
+            return;
+        }
+
+        issueLineItems.push({ cat, item, qty, bales, rate, amt });
+        renderIssueLineItems();
+
+        document.getElementById('tempIssCat').value = "";
+        document.getElementById('tempIssItem').innerHTML = '<option value="">Select Item</option>';
+        document.getElementById('tempIssQty').value = "";
+        document.getElementById('tempIssBales').value = "";
+        document.getElementById('tempIssRate').value = "";
+        document.getElementById('tempIssAmount').value = "";
+        document.getElementById('tempIssStockBal').value = "";
+    }
+
+    function renderIssueLineItems() {
+        const body = document.getElementById('issueLineItemBody');
+        body.innerHTML = "";
+        if(issueLineItems.length === 0) {
+            body.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #999;">No items added yet.</td></tr>';
+            return;
+        }
+        issueLineItems.forEach((row, index) => {
+            body.innerHTML += `<tr>
+                <td>${row.cat}</td>
+                <td>${row.item}</td>
+                <td>${row.qty}</td>
+                <td>${row.bales}</td>
+                <td>${row.rate}</td>
+                <td>${row.amt.toFixed(2)}</td>
+                <td style="text-align: center;"><button type="button" style="background: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer; padding: 5px 10px;" onclick="removeIssueLineItem(${index})">X</button></td>
+            </tr>`;
+        });
+    }
+
+    function removeIssueLineItem(index) {
+        issueLineItems.splice(index, 1);
+        renderIssueLineItems();
     }
 
     async function executePost(data, msg, formId, dept, histId) {
         try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ data: [data] }) }); alert(msg); if(formId){ document.getElementById(formId).reset(); loadHistory(dept, histId); } } catch(e){ alert("Error"); }
     }
 
-    // New Submit Method for Multiple Items
     async function submitMultiRec() {
         const dateVal = document.getElementById('recDate').value;
         const supplierVal = document.getElementById('recSupplier').value;
@@ -630,22 +711,51 @@
         }
     }
 
-    function submitRawIssue() {
-        const d = { 
-            "Department": "RAW_MATERIAL_ISSUE", 
-            "Date": document.getElementById('issDate').value, 
-            "Issue Slip No.": document.getElementById('issSlip').value, 
-            "Issuing To (Dept)": document.getElementById('issDept').value, 
-            "Category": document.getElementById('issCat').value, 
-            "Item Description": document.getElementById('issItem').value, 
-            "Qty (KG)": document.getElementById('issQty').value, 
-            "Bales": document.getElementById('issBales').value, 
-            "Rate": document.getElementById('issRate').value, 
-            "Total Amount": document.getElementById('issAmount').value, 
-            "Remarks": document.getElementById('issRemarks').value, 
-            "User": currentUser 
-        };
-        executePost(d, "Saved!", "rawIssueForm", "RAW_MATERIAL_ISSUE", "issHistoryBody");
+    async function submitMultiIssue() {
+        const dateVal = document.getElementById('issDate').value;
+        const slipVal = document.getElementById('issSlip').value;
+        const deptVal = document.getElementById('issDept').value;
+        const remarksVal = document.getElementById('issRemarks').value;
+
+        if (!dateVal || !slipVal || !deptVal) {
+            alert("Please fill out Date, Issue Slip No., and Dept.");
+            return;
+        }
+
+        if (issueLineItems.length === 0) {
+            alert("Please add at least one item to the issue.");
+            return;
+        }
+
+        const payload = issueLineItems.map(row => ({
+            "Department": "RAW_MATERIAL_ISSUE",
+            "Date": dateVal,
+            "Issue Slip No.": slipVal,
+            "Issuing To (Dept)": deptVal,
+            "Category": row.cat,
+            "Item Description": row.item,
+            "Qty (KG)": row.qty,
+            "Bales": row.bales,
+            "Rate": row.rate,
+            "Total Amount": row.amt,
+            "Remarks": remarksVal,
+            "User": currentUser
+        }));
+
+        try {
+            await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ data: payload }) });
+            alert("Issue Saved Successfully!");
+            document.getElementById('rawIssueForm').reset();
+            issueLineItems = [];
+            renderIssueLineItems();
+            loadHistory("RAW_MATERIAL_ISSUE", "issHistoryBody");
+            
+            // Re-fetch issues to ensure next balance checks update properly
+            const res = await fetch(`${API_URL}?Department=RAW_MATERIAL_ISSUE&t=${Date.now()}`); 
+            cachedIssues = await res.json();
+        } catch(e) { 
+            alert("Error saving issue."); 
+        }
     }
 
     function downloadFilteredExcel(tableId, fromId, toId, fileName) {
