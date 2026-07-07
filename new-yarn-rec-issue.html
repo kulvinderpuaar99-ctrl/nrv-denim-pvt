@@ -174,34 +174,53 @@
     <div class="container">
         <h2 style="border-left-color: #27ae60;">Yarn Receipt (GRN)</h2>
         <form id="rawRecForm">
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 20px;">
-                <div class="form-group"><label>Date</label><input type="date" id="recDate"></div>
+            <!-- Header Section -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 20px; border-bottom: 2px solid #eee;">
+                <div class="form-group"><label>Date <span style="color:red">*</span></label><input type="date" id="recDate"></div>
                 <div class="form-group">
-                    <label>Category</label>
+                    <label>Category <span style="color:red">*</span></label>
                     <select id="recCat" onchange="fetchRecItemsByCategory()">
                         <option value="">Select Category</option>
                         <option value="Market Purchase Yarn">Market Purchase Yarn</option>
                         <option value="Ring U-1 Yarn">Ring U-2 Yarn</option>
                         <option value="OE U-2 Yarn">OE U-2 Yarn</option>
                         <option value="OE U-3 Yarn">OE U-3 Yarn</option>
-                       
-                        
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Item Description</label>
-                    <input type="text" id="recItem" list="recItemsList" placeholder="Type or select...">
-                    <datalist id="recItemsList"></datalist>
-                </div>
-                <div class="form-group"><label>Lot No.</label><input type="text" id="recLotNo"></div>
-                <div class="form-group"><label>Qty (KG)</label><input type="number" id="recQty" step="0.01" oninput="calculateRec()"></div>
-                <div class="form-group"><label>Bags/Pellets</label><input type="number" id="recBales"></div>
-                <div class="form-group"><label>Cones</label><input type="number" id="recCones"></div>
-                <div class="form-group"><label>Rate</label><input type="number" id="recRate" step="0.01" oninput="calculateRec()"></div>
-                <div class="form-group"><label>Total Amount</label><input type="number" id="recAmount" readonly style="background:#f1f2f6;"></div>
                 <div class="form-group"><label>Remarks</label><input type="text" id="recRemarks"></div>
             </div>
-            <div style="text-align: right; padding: 20px;"><button type="button" class="btn-submit" onclick="submitRawRec()">SAVE RECEIPT</button></div>
+
+            <!-- Multi-Item Entry Section -->
+            <div style="padding: 20px; background: #fcfcfc;">
+                <h3 style="margin-top: 0; color: #2c3e50; font-size: 14px; text-transform: uppercase;">Add Items</h3>
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr auto; gap: 10px; align-items: end; margin-bottom: 15px;">
+                    <div class="form-group">
+                        <label>Item Description <span style="color:red">*</span></label>
+                        <input type="text" id="tempItem" list="recItemsList" placeholder="Type or select...">
+                        <datalist id="recItemsList"></datalist>
+                    </div>
+                    <div class="form-group"><label>Lot No.</label><input type="text" id="tempLotNo"></div>
+                    <div class="form-group"><label>Qty (KG) <span style="color:red">*</span></label><input type="number" id="tempQty" step="0.01" oninput="calculateTempAmount()"></div>
+                    <div class="form-group"><label>Bags/Pellets</label><input type="number" id="tempBales"></div>
+                    <div class="form-group"><label>Cones</label><input type="number" id="tempCones"></div>
+                    <div class="form-group"><label>Rate</label><input type="number" id="tempRate" step="0.01" oninput="calculateTempAmount()"></div>
+                    <div class="form-group"><label>Amount</label><input type="number" id="tempAmount" readonly style="background:#f1f2f6;"></div>
+                    <button type="button" class="btn-submit" style="margin-top: 0; padding: 9px 15px; background: #2980b9;" onclick="addLineItem()">+ ADD</button>
+                </div>
+
+                <table id="lineItemTable">
+                    <thead>
+                        <tr><th>Item Description</th><th>Lot No.</th><th>Qty (KG)</th><th>Bags/Pellets</th><th>Cones</th><th>Rate</th><th>Amount</th><th style="text-align: center;">Action</th></tr>
+                    </thead>
+                    <tbody id="lineItemBody">
+                        <tr><td colspan="8" style="text-align: center; color: #999;">No items added yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="text-align: right; padding: 20px; border-top: 2px solid #eee;">
+                <button type="button" class="btn-submit" onclick="submitMultiRec()">SAVE RECEIPT (ALL ITEMS)</button>
+            </div>
         </form>
         <div class="history-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -227,43 +246,62 @@
     <div class="container">
         <h2 style="border-left-color: #8e44ad;">Yarn Issue</h2>
         <form id="rawIssueForm">
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 20px;">
-                <div class="form-group"><label>Date</label><input type="date" id="issDate"></div>
-                <div class="form-group"><label>Issue Slip No.</label><input type="text" id="issSlip"></div>
+            <!-- Header Section -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 20px; border-bottom: 2px solid #eee;">
+                <div class="form-group"><label>Date <span style="color:red">*</span></label><input type="date" id="issDate"></div>
+                <div class="form-group"><label>Issue Slip No. <span style="color:red">*</span></label><input type="text" id="issSlip"></div>
                 <div class="form-group">
-                    <label>Dept</label>
+                    <label>Dept <span style="color:red">*</span></label>
                     <select id="issDept">
                         <option value="">Select Dept</option>
-                        
                         <option value="Loom">Loom</option>
                         <option value="Ball Warping">Ball Warping</option>
                         <option value="IDR Dying">IDR Dying</option>
                         <option value="Sale">Sale</option>
-                        
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Category</label>
-                    <select id="issCat" onchange="fetchItemsByCategory()">
-                        <option value="">Select Category</option>
-                        <option value="Market Purchase Yarn">Market Purchase Yarn</option>
-                        <option value="OE U-2 Yarn">OE U-2 Yarn</option>
-                        <option value="OE Plant Waste">OE Plant Waste</option>
-                        <option value="OE U-3 Yarn">OE U-3 Yarn</option>
-                        <option value="OE Dust">OE Dust</option>
-                                            </select>
-                </div>
-                <div class="form-group"><label>Item Description</label><select id="issItem" onchange="fetchItemStats()"><option value="">Select Item</option></select></div>
-                <div class="form-group"><label>Lot No.</label><select id="issLotNo" onchange="fetchLotStats()"><option value="UNSELECTED">Select Lot</option></select></div>
-                <div class="form-group"><label style="color: #1565c0;">Available (KG)</label><input type="number" id="issStockBal" readonly style="background:#e3f2fd; font-weight:bold;"></div>
-                <div class="form-group"><label>Issue Qty (KG)</label><input type="number" id="issQty" step="0.01" oninput="calculateIss()"></div>
-                <div class="form-group"><label>Bags/Pellets</label><input type="number" id="issBales"></div>
-                <div class="form-group"><label>Cones</label><input type="number" id="issCones"></div>
-                <div class="form-group"><label>Rate (Avg)</label><input type="number" id="issRate" step="0.01" readonly style="background:#f1f2f6;"></div>
-                <div class="form-group"><label>Total Amount</label><input type="number" id="issAmount" readonly style="background:#f1f2f6;"></div>
                 <div class="form-group"><label>Remarks</label><input type="text" id="issRemarks"></div>
             </div>
-            <div style="text-align: right; padding: 20px;"><button type="button" class="btn-submit" onclick="submitRawIssue()" style="background:#8e44ad">CONFIRM ISSUE</button></div>
+
+            <!-- Multi-Item Entry Section -->
+            <div style="padding: 20px; background: #fcfcfc;">
+                <h3 style="margin-top: 0; color: #2c3e50; font-size: 14px; text-transform: uppercase;">Add Items</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; align-items: end; margin-bottom: 15px;">
+                    <div class="form-group">
+                        <label>Category <span style="color:red">*</span></label>
+                        <select id="tempIssCat" onchange="fetchItemsByCategory()">
+                            <option value="">Select Category</option>
+                            <option value="Market Purchase Yarn">Market Purchase Yarn</option>
+                            <option value="OE U-2 Yarn">OE U-2 Yarn</option>
+                            <option value="OE Plant Waste">OE Plant Waste</option>
+                            <option value="OE U-3 Yarn">OE U-3 Yarn</option>
+                            <option value="OE Dust">OE Dust</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Item Description <span style="color:red">*</span></label><select id="tempIssItem" onchange="fetchItemStats()"><option value="">Select Item</option></select></div>
+                    <div class="form-group"><label>Lot No. <span style="color:red">*</span></label><select id="tempIssLotNo" onchange="fetchLotStats()"><option value="UNSELECTED">Select Lot</option></select></div>
+                    <div class="form-group"><label style="color: #1565c0;">Available (KG)</label><input type="number" id="tempIssStockBal" readonly style="background:#e3f2fd; font-weight:bold;"></div>
+                    <div class="form-group"><label>Issue Qty (KG) <span style="color:red">*</span></label><input type="number" id="tempIssQty" step="0.01" oninput="calculateIss()"></div>
+                    <div class="form-group"><label>Bags/Pellets</label><input type="number" id="tempIssBales"></div>
+                    <div class="form-group"><label>Cones</label><input type="number" id="tempIssCones"></div>
+                    <div class="form-group"><label>Rate (Avg)</label><input type="number" id="tempIssRate" step="0.01" readonly style="background:#f1f2f6;"></div>
+                    <div class="form-group"><label>Amount</label><input type="number" id="tempIssAmount" readonly style="background:#f1f2f6;"></div>
+                    <button type="button" class="btn-submit" style="margin-top: 0; padding: 9px 15px; background: #8e44ad;" onclick="addIssueLineItem()">+ ADD</button>
+                </div>
+
+                <table id="issueLineItemTable">
+                    <thead>
+                        <tr><th>Category</th><th>Item Description</th><th>Lot No.</th><th>Qty (KG)</th><th>Bags/Pellets</th><th>Cones</th><th>Rate</th><th>Amount</th><th style="text-align: center;">Action</th></tr>
+                    </thead>
+                    <tbody id="issueLineItemBody">
+                        <tr><td colspan="9" style="text-align: center; color: #999;">No items added yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="text-align: right; padding: 20px; border-top: 2px solid #eee;">
+                <button type="button" class="btn-submit" onclick="submitMultiIssue()" style="background:#8e44ad">CONFIRM ISSUE (ALL ITEMS)</button>
+            </div>
         </form>
         <div class="history-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -296,8 +334,10 @@
     let currentUser = "";
     let cachedReceipts = [];
     let cachedIssues = [];
-    let cachedArticles = []; // NEW: Cache for Article Master data
+    let cachedArticles = [];
     let globalStockMap = {};
+    let lineItems = []; 
+    let issueLineItems = [];
 
     window.onload = () => { 
         document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7); 
@@ -323,11 +363,18 @@
             document.getElementById('recDate').valueAsDate = new Date();
             loadHistory('YARN_REC', 'recHistoryBody');
             refreshRecCache();
-            refreshArticleCache(); // NEW: Fetch the Article Master when opening Receipt App
+            refreshArticleCache(); 
         }
         if(appId === 'rawIssue') {
             document.getElementById('issDate').valueAsDate = new Date();
             loadHistory('YARN_ISSUE', 'issHistoryBody');
+            
+            const [rR, rI] = await Promise.all([
+                fetch(`${API_URL}?Department=YARN_REC&t=${Date.now()}`), 
+                fetch(`${API_URL}?Department=YARN_ISSUE&t=${Date.now()}`)
+            ]);
+            cachedReceipts = await rR.json(); 
+            cachedIssues = await rI.json();
         }
         if(appId === 'balanceStock') loadBalanceStock();
     }
@@ -339,7 +386,6 @@
         } catch(e){}
     }
 
-    // NEW FUNCTION: Fetch the Article Master data
     async function refreshArticleCache() {
         try {
             const res = await fetch(`${API_URL}?Department=ARTICLE_MASTER&t=${Date.now()}`);
@@ -349,15 +395,12 @@
         }
     }
 
-    // MODIFIED FUNCTION: Fetch Items by Category from ARTICLE_MASTER instead of Receipts
     function fetchRecItemsByCategory() {
         const cat = document.getElementById('recCat').value;
         const list = document.getElementById('recItemsList');
         list.innerHTML = "";
         
-        // Filter from the Article Master sheet
         const items = [...new Set(cachedArticles.filter(r => {
-            // Check headers mapping correctly to user's specified column names, handling potential double spaces
             const rowCat = String(r["Raw Material Category"] || r["Raw Material  Category"] || "");
             return rowCat.trim().toUpperCase() === String(cat).trim().toUpperCase();
         }).map(r => String(r["Article"] || r["Article"] || "")))];
@@ -379,7 +422,6 @@
                     const d = new Date(row["Date"]);
                     dateStr = d.toLocaleDateString('en-GB'); 
                     
-                    // FIXED: Generate YYYY-MM-DD manually to avoid UTC shift
                     const y = d.getFullYear();
                     const m = String(d.getMonth() + 1).padStart(2, '0');
                     const day = String(d.getDate()).padStart(2, '0');
@@ -443,7 +485,6 @@
                     const monthNum = String(dateVal.getMonth() + 1).padStart(2, '0');
                     const itemMonth = `${year}-${monthNum}`;
                     
-                    // Fixed Bug: Safely cast to string before trimming to prevent TypeError
                     const itemCat = String(item["Category"] || "N/A").trim().toUpperCase();
                     const itemDesc = String(item["Item Description"] || "").trim().toUpperCase();
                     const itemLot = String(item["Lot No."] || "").trim().toUpperCase();
@@ -490,50 +531,99 @@
         document.getElementById('stockTableFoot').innerHTML = `<tr style="background:#2c3e50; color:white; font-weight:bold;"><td colspan="3">TOTAL:</td><td>${fF(gOK,gOB,gOA)}</td><td>${fF(gRK,gRB,gRA)}</td><td>${fF(gIK,gIB,gIA)}</td><td>${fF(gCK,gCB,gCA)}</td><td></td></tr>`;
     }
 
-    function calculateRec() { const q = document.getElementById('recQty').value||0, r = document.getElementById('recRate').value||0; document.getElementById('recAmount').value = (q*r).toFixed(2); }
-    function calculateIss() { const q = document.getElementById('issQty').value||0, r = document.getElementById('issRate').value||0; document.getElementById('issAmount').value = (q*r).toFixed(2); }
+    // MULTI-ITEM RECEIPT FUNCTIONS
+    function calculateTempAmount() {
+        const q = parseFloat(document.getElementById('tempQty').value) || 0;
+        const r = parseFloat(document.getElementById('tempRate').value) || 0;
+        document.getElementById('tempAmount').value = (q * r).toFixed(2);
+    }
 
-    // MODIFIED FUNCTION: Fetch items that only have available stock > 0
+    function addLineItem() {
+        const item = document.getElementById('tempItem').value;
+        const lotNo = document.getElementById('tempLotNo').value;
+        const qty = parseFloat(document.getElementById('tempQty').value) || 0;
+        const bales = parseFloat(document.getElementById('tempBales').value) || 0;
+        const cones = parseFloat(document.getElementById('tempCones').value) || 0;
+        const rate = parseFloat(document.getElementById('tempRate').value) || 0;
+        const amt = parseFloat(document.getElementById('tempAmount').value) || 0;
+
+        if (!item || qty <= 0) {
+            alert("Please enter Item Description and valid Qty.");
+            return;
+        }
+
+        lineItems.push({ item, lotNo, qty, bales, cones, rate, amt });
+        renderLineItems();
+
+        document.getElementById('tempItem').value = "";
+        document.getElementById('tempLotNo').value = "";
+        document.getElementById('tempQty').value = "";
+        document.getElementById('tempBales').value = "";
+        document.getElementById('tempCones').value = "";
+        document.getElementById('tempRate').value = "";
+        document.getElementById('tempAmount').value = "";
+    }
+
+    function renderLineItems() {
+        const body = document.getElementById('lineItemBody');
+        body.innerHTML = "";
+        if(lineItems.length === 0) {
+            body.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #999;">No items added yet.</td></tr>';
+            return;
+        }
+        lineItems.forEach((row, index) => {
+            body.innerHTML += `<tr>
+                <td>${row.item}</td>
+                <td>${row.lotNo}</td>
+                <td>${row.qty}</td>
+                <td>${row.bales}</td>
+                <td>${row.cones}</td>
+                <td>${row.rate}</td>
+                <td>${row.amt.toFixed(2)}</td>
+                <td style="text-align: center;"><button type="button" style="background: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer; padding: 5px 10px;" onclick="removeLineItem(${index})">X</button></td>
+            </tr>`;
+        });
+    }
+
+    function removeLineItem(index) {
+        lineItems.splice(index, 1);
+        renderLineItems();
+    }
+
+    // MULTI-ITEM ISSUE FUNCTIONS
+    function calculateIss() { 
+        const q = document.getElementById('tempIssQty').value || 0;
+        const r = document.getElementById('tempIssRate').value || 0; 
+        document.getElementById('tempIssAmount').value = (q * r).toFixed(2); 
+    }
+
     async function fetchItemsByCategory() {
-        const cat = document.getElementById('issCat').value, sel = document.getElementById('issItem');
+        const cat = document.getElementById('tempIssCat').value;
+        const sel = document.getElementById('tempIssItem');
+        
         sel.innerHTML = '<option>Loading...</option>';
         try {
-            const [rR, rI] = await Promise.all([
-                fetch(`${API_URL}?Department=YARN_REC&t=${Date.now()}`), 
-                fetch(`${API_URL}?Department=YARN_ISSUE&t=${Date.now()}`)
-            ]);
-            cachedReceipts = await rR.json(); cachedIssues = await rI.json();
+            if (!cachedReceipts.length || !cachedIssues.length) {
+                const [rR, rI] = await Promise.all([
+                    fetch(`${API_URL}?Department=YARN_REC&t=${Date.now()}`), 
+                    fetch(`${API_URL}?Department=YARN_ISSUE&t=${Date.now()}`)
+                ]);
+                cachedReceipts = await rR.json(); 
+                cachedIssues = await rI.json();
+            }
             
-            // Get all unique items mapped to this category
             const allItems = [...new Set(cachedReceipts.filter(r => String(r["Category"]||"").toUpperCase() === String(cat).toUpperCase()).map(r => r["Item Description"]))];
             
             sel.innerHTML = '<option value="">Select Item</option>';
-
-            // Iterate over items to calculate if they have available stock across all their lots
             allItems.forEach(itm => {
                 if(itm) {
-                    let tQ = 0;
-                    let tI = 0;
+                    let tQ = 0; let tI = 0;
                     const strCat = String(cat).trim();
                     const strItm = String(itm).trim();
 
-                    // Sum receipts for this specific Item
-                    cachedReceipts.filter(r => 
-                        String(r["Category"]||"").trim() === strCat && 
-                        String(r["Item Description"]||"").trim() === strItm
-                    ).forEach(m => { 
-                        tQ += parseFloat(m["Qty (KG)"]||0); 
-                    });
-                    
-                    // Sum issues for this specific Item
-                    cachedIssues.filter(i => 
-                        String(i["Category"]||"").trim() === strCat && 
-                        String(i["Item Description"]||"").trim() === strItm
-                    ).forEach(m => { 
-                        tI += parseFloat(m["Qty (KG)"]||0); 
-                    });
+                    cachedReceipts.filter(r => String(r["Category"]||"").trim() === strCat && String(r["Item Description"]||"").trim() === strItm).forEach(m => { tQ += parseFloat(m["Qty (KG)"]||0); });
+                    cachedIssues.filter(i => String(i["Category"]||"").trim() === strCat && String(i["Item Description"]||"").trim() === strItm).forEach(m => { tI += parseFloat(m["Qty (KG)"]||0); });
 
-                    // Only append to dropdown if stock is greater than 0
                     if ((tQ - tI) > 0) {
                         sel.innerHTML += `<option value="${itm}">${itm}</option>`;
                     }
@@ -545,18 +635,16 @@
     }
 
     function fetchItemStats() {
-        const cat = document.getElementById('issCat').value;
-        const itm = document.getElementById('issItem').value;
-        const lotSel = document.getElementById('issLotNo');
+        const cat = document.getElementById('tempIssCat').value;
+        const itm = document.getElementById('tempIssItem').value;
+        const lotSel = document.getElementById('tempIssLotNo');
         
-        // Reset Lot Dropdown, Rate and Stock Balance
         lotSel.innerHTML = '<option value="UNSELECTED">Select Lot</option>';
-        document.getElementById('issRate').value = '';
-        document.getElementById('issStockBal').value = '';
+        document.getElementById('tempIssRate').value = '';
+        document.getElementById('tempIssStockBal').value = '';
 
         if(!cat || !itm) return;
 
-        // Bug Fix: Safely convert to string when comparing and collecting lots
         const strCat = String(cat).trim();
         const strItm = String(itm).trim();
 
@@ -565,32 +653,13 @@
             .map(r => String(r["Lot No."] || "").trim()))];
             
         lots.forEach(lot => { 
-            let tQ = 0;
-            let tI = 0;
+            let tQ = 0; let tI = 0;
             const strLot = String(lot).trim();
 
-            // Calculate total receipts for this single lot
-            cachedReceipts.filter(r => 
-                String(r["Category"]||"").trim() === strCat && 
-                String(r["Item Description"]||"").trim() === strItm && 
-                String(r["Lot No."] || "").trim() === strLot
-            ).forEach(m => { 
-                tQ += parseFloat(m["Qty (KG)"]||0); 
-            });
-            
-            // Calculate total issues for this single lot
-            cachedIssues.filter(i => 
-                String(i["Category"]||"").trim() === strCat && 
-                String(i["Item Description"]||"").trim() === strItm && 
-                String(i["Lot No."] || "").trim() === strLot
-            ).forEach(m => { 
-                tI += parseFloat(m["Qty (KG)"]||0); 
-            });
+            cachedReceipts.filter(r => String(r["Category"]||"").trim() === strCat && String(r["Item Description"]||"").trim() === strItm && String(r["Lot No."] || "").trim() === strLot).forEach(m => { tQ += parseFloat(m["Qty (KG)"]||0); });
+            cachedIssues.filter(i => String(i["Category"]||"").trim() === strCat && String(i["Item Description"]||"").trim() === strItm && String(i["Lot No."] || "").trim() === strLot).forEach(m => { tI += parseFloat(m["Qty (KG)"]||0); });
 
-            // Dynamically check remaining stock balance
             const availableStock = tQ - tI;
-
-            // Only show lot options that have available stock greater than 0
             if (availableStock > 0) {
                 lotSel.innerHTML += `<option value="${lot}">${lot === "" ? "No Lot" : lot}</option>`; 
             }
@@ -598,99 +667,180 @@
     }
 
     function fetchLotStats() {
-        const cat = document.getElementById('issCat').value;
-        const itm = document.getElementById('issItem').value;
-        const lot = document.getElementById('issLotNo').value;
+        const cat = document.getElementById('tempIssCat').value;
+        const itm = document.getElementById('tempIssItem').value;
+        const lot = document.getElementById('tempIssLotNo').value;
 
         if(!cat || !itm || lot === "UNSELECTED") {
-            document.getElementById('issRate').value = '';
-            document.getElementById('issStockBal').value = '';
+            document.getElementById('tempIssRate').value = '';
+            document.getElementById('tempIssStockBal').value = '';
             return;
         }
 
         let tR=0, tQ=0, tI=0;
-        
-        // Bug Fix: Convert all to String before comparison to prevent Number vs String mismatch
         const strCat = String(cat).trim();
         const strItm = String(itm).trim();
         const strLot = String(lot).trim();
 
-        cachedReceipts.filter(r => 
-            String(r["Category"]||"").trim() === strCat && 
-            String(r["Item Description"]||"").trim() === strItm && 
-            String(r["Lot No."] || "").trim() === strLot
-        ).forEach(m => { 
-            tR+=parseFloat(m["Total Amount"]||0); 
-            tQ+=parseFloat(m["Qty (KG)"]||0); 
-        });
-        
-        cachedIssues.filter(i => 
-            String(i["Category"]||"").trim() === strCat && 
-            String(i["Item Description"]||"").trim() === strItm && 
-            String(i["Lot No."] || "").trim() === strLot
-        ).forEach(m => { 
-            tI+=parseFloat(m["Qty (KG)"]||0); 
-        });
+        cachedReceipts.filter(r => String(r["Category"]||"").trim() === strCat && String(r["Item Description"]||"").trim() === strItm && String(r["Lot No."] || "").trim() === strLot).forEach(m => { tR+=parseFloat(m["Total Amount"]||0); tQ+=parseFloat(m["Qty (KG)"]||0); });
+        cachedIssues.filter(i => String(i["Category"]||"").trim() === strCat && String(i["Item Description"]||"").trim() === strItm && String(i["Lot No."] || "").trim() === strLot).forEach(m => { tI+=parseFloat(m["Qty (KG)"]||0); });
 
-        document.getElementById('issRate').value = tQ>0 ? (tR/tQ).toFixed(2) : 0;
-        document.getElementById('issStockBal').value = (tQ - tI).toFixed(2);
+        document.getElementById('tempIssRate').value = tQ>0 ? (tR/tQ).toFixed(2) : 0;
+        document.getElementById('tempIssStockBal').value = (tQ - tI).toFixed(2);
         calculateIss();
     }
 
-    async function executePost(data, msg, formId, dept, histId) {
-        try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ data: [data] }) }); alert(msg); if(formId){ document.getElementById(formId).reset(); loadHistory(dept, histId); } } catch(e){ alert("Error"); }
-    }
+    function addIssueLineItem() {
+        const cat = document.getElementById('tempIssCat').value;
+        const item = document.getElementById('tempIssItem').value;
+        const lotNo = document.getElementById('tempIssLotNo').value;
+        const qty = parseFloat(document.getElementById('tempIssQty').value) || 0;
+        const bales = parseFloat(document.getElementById('tempIssBales').value) || 0;
+        const cones = parseFloat(document.getElementById('tempIssCones').value) || 0;
+        const rate = parseFloat(document.getElementById('tempIssRate').value) || 0;
+        const amt = parseFloat(document.getElementById('tempIssAmount').value) || 0;
+        const availStock = parseFloat(document.getElementById('tempIssStockBal').value) || 0;
 
-    function submitRawRec() {
-        const d = { 
-            "Department": "YARN_REC", 
-            "Date": document.getElementById('recDate').value, 
-            "Category": document.getElementById('recCat').value, 
-            "Item Description": document.getElementById('recItem').value, 
-            "Lot No.": document.getElementById('recLotNo').value ? "'" + document.getElementById('recLotNo').value : "",
-            "Qty (KG)": document.getElementById('recQty').value, 
-            "Bags/Pellets": document.getElementById('recBales').value, 
-            "Cones": document.getElementById('recCones').value, 
-            "Rate": document.getElementById('recRate').value, 
-            "Total Amount": document.getElementById('recAmount').value, 
-            "Remarks": document.getElementById('recRemarks').value, 
-            "User": currentUser 
-        };
-        executePost(d, "Saved!", "rawRecForm", "YARN_REC", "recHistoryBody");
-    }
-
-    // MODIFIED FUNCTION: Validate Issue Quantity against Available Stock before submitting
-    function submitRawIssue() {
-        const issQty = parseFloat(document.getElementById('issQty').value || 0);
-        const availStock = parseFloat(document.getElementById('issStockBal').value || 0);
-
-        if (issQty <= 0) {
-            alert("Please enter a valid issue quantity greater than 0.");
+        if (!cat || !item || lotNo === "UNSELECTED" || qty <= 0) {
+            alert("Please select Category, Item, Lot No, and enter a valid Issue Qty.");
             return;
         }
 
-        if (issQty > availStock) {
+        if (qty > availStock) {
             alert("Error: Issue quantity cannot be greater than the available stock!");
             return;
         }
 
-        const d = { 
-            "Department": "YARN_ISSUE", 
-            "Date": document.getElementById('issDate').value, 
-            "Issue Slip No.": document.getElementById('issSlip').value, 
-            "Issuing To (Dept)": document.getElementById('issDept').value, 
-            "Category": document.getElementById('issCat').value, 
-            "Item Description": document.getElementById('issItem').value, 
-            "Lot No.": document.getElementById('issLotNo').value === "UNSELECTED" ? "" : "'" + document.getElementById('issLotNo').value,
-            "Qty (KG)": issQty, 
-            "Bags/Pellets": document.getElementById('issBales').value, 
-            "Cones": document.getElementById('issCones').value, 
-            "Rate": document.getElementById('issRate').value, 
-            "Total Amount": document.getElementById('issAmount').value, 
-            "Remarks": document.getElementById('issRemarks').value, 
-            "User": currentUser 
-        };
-        executePost(d, "Saved!", "rawIssueForm", "YARN_ISSUE", "issHistoryBody");
+        issueLineItems.push({ cat, item, lotNo, qty, bales, cones, rate, amt });
+        renderIssueLineItems();
+
+        document.getElementById('tempIssCat').value = "";
+        document.getElementById('tempIssItem').innerHTML = '<option value="">Select Item</option>';
+        document.getElementById('tempIssLotNo').innerHTML = '<option value="UNSELECTED">Select Lot</option>';
+        document.getElementById('tempIssQty').value = "";
+        document.getElementById('tempIssBales').value = "";
+        document.getElementById('tempIssCones').value = "";
+        document.getElementById('tempIssRate').value = "";
+        document.getElementById('tempIssAmount').value = "";
+        document.getElementById('tempIssStockBal').value = "";
+    }
+
+    function renderIssueLineItems() {
+        const body = document.getElementById('issueLineItemBody');
+        body.innerHTML = "";
+        if(issueLineItems.length === 0) {
+            body.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #999;">No items added yet.</td></tr>';
+            return;
+        }
+        issueLineItems.forEach((row, index) => {
+            body.innerHTML += `<tr>
+                <td>${row.cat}</td>
+                <td>${row.item}</td>
+                <td>${row.lotNo}</td>
+                <td>${row.qty}</td>
+                <td>${row.bales}</td>
+                <td>${row.cones}</td>
+                <td>${row.rate}</td>
+                <td>${row.amt.toFixed(2)}</td>
+                <td style="text-align: center;"><button type="button" style="background: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer; padding: 5px 10px;" onclick="removeIssueLineItem(${index})">X</button></td>
+            </tr>`;
+        });
+    }
+
+    function removeIssueLineItem(index) {
+        issueLineItems.splice(index, 1);
+        renderIssueLineItems();
+    }
+
+    // SUBMIT ARRAYS TO BACKEND
+    async function submitMultiRec() {
+        const dateVal = document.getElementById('recDate').value;
+        const catVal = document.getElementById('recCat').value;
+        const remarksVal = document.getElementById('recRemarks').value;
+
+        if (!dateVal || !catVal) {
+            alert("Please fill out Date and Category.");
+            return;
+        }
+
+        if (lineItems.length === 0) {
+            alert("Please add at least one item to the receipt.");
+            return;
+        }
+
+        const payload = lineItems.map(row => ({
+            "Department": "YARN_REC",
+            "Date": dateVal,
+            "Category": catVal,
+            "Item Description": row.item,
+            "Lot No.": row.lotNo ? "'" + row.lotNo : "",
+            "Qty (KG)": row.qty,
+            "Bags/Pellets": row.bales,
+            "Cones": row.cones,
+            "Rate": row.rate,
+            "Total Amount": row.amt,
+            "Remarks": remarksVal,
+            "User": currentUser
+        }));
+
+        try {
+            await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ data: payload }) });
+            alert("Receipt Saved Successfully!");
+            document.getElementById('rawRecForm').reset();
+            lineItems = [];
+            renderLineItems();
+            loadHistory("YARN_REC", "recHistoryBody");
+        } catch(e) { 
+            alert("Error saving receipt."); 
+        }
+    }
+
+    async function submitMultiIssue() {
+        const dateVal = document.getElementById('issDate').value;
+        const slipVal = document.getElementById('issSlip').value;
+        const deptVal = document.getElementById('issDept').value;
+        const remarksVal = document.getElementById('issRemarks').value;
+
+        if (!dateVal || !slipVal || !deptVal) {
+            alert("Please fill out Date, Issue Slip No., and Dept.");
+            return;
+        }
+
+        if (issueLineItems.length === 0) {
+            alert("Please add at least one item to the issue.");
+            return;
+        }
+
+        const payload = issueLineItems.map(row => ({
+            "Department": "YARN_ISSUE",
+            "Date": dateVal,
+            "Issue Slip No.": slipVal,
+            "Issuing To (Dept)": deptVal,
+            "Category": row.cat,
+            "Item Description": row.item,
+            "Lot No.": row.lotNo === "UNSELECTED" || row.lotNo === "" ? "" : "'" + row.lotNo,
+            "Qty (KG)": row.qty,
+            "Bags/Pellets": row.bales,
+            "Cones": row.cones,
+            "Rate": row.rate,
+            "Total Amount": row.amt,
+            "Remarks": remarksVal,
+            "User": currentUser
+        }));
+
+        try {
+            await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ data: payload }) });
+            alert("Issue Saved Successfully!");
+            document.getElementById('rawIssueForm').reset();
+            issueLineItems = [];
+            renderIssueLineItems();
+            loadHistory("YARN_ISSUE", "issHistoryBody");
+            
+            const res = await fetch(`${API_URL}?Department=YARN_ISSUE&t=${Date.now()}`); 
+            cachedIssues = await res.json();
+        } catch(e) { 
+            alert("Error saving issue."); 
+        }
     }
 
     function downloadFilteredExcel(tableId, fromId, toId, fileName) {
