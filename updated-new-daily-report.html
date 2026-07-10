@@ -244,7 +244,7 @@
                 
                 if(cat === "MARKET PURCHASE WASTE") dailyData[d].mr_mkt += qty;
                 else if(cat === "PLANT WASTE" || cat === "OE PLANT WASTE") {
-                    if(item !== "MICRO DUST" && item !== "ROTAR FILTER") {
+                    if(item !== "MICRO DUST" && item !== "ROTAR FILTER" && item !== "HARD WASTE") {
                         dailyData[d].mr_plt += qty;
                     }
                 }
@@ -267,7 +267,7 @@
                 
                 if(cat === "MARKET PURCHASE WASTE") dailyData[d].mi_mkt += qty;
                 else if(cat === "PLANT WASTE") {
-                    if(item !== "MICRO DUST" && item !== "ROTAR FILTER") {
+                    if(item !== "MICRO DUST" && item !== "ROTAR FILTER" && item !== "HARD WASTE") {
                         dailyData[d].mi_plt += qty;
                     }
                 }
