@@ -317,7 +317,7 @@
                     openWip = prevIssueTotal > 0 ? (prevIssueTotal * (100 - (openRecPercent + 2.5)) / 100) : 0;
 
                     tbody.innerHTML += `<tr style="background-color: #fff9c4; font-weight: bold; color: #000;">
-                        <td>Opening</td>
+                        <td t="s">Opening</td>
                         <td class="grp-rw-rec">-</td><td class="grp-rw-rec">-</td><td class="grp-rw-rec">-</td>
                         <td class="grp-rw-iss">-</td><td class="grp-rw-iss">-</td><td class="grp-rw-iss">-</td>
                         
@@ -348,7 +348,7 @@
                     let wip = issueTotal > 0 ? (issueTotal * (100 - (recPercent + 2.5)) / 100) : 0;
 
                     tbody.innerHTML += `<tr>
-                        <td>${formatDateToDMY(date)}</td>
+                        <td t="s">${formatDateToDMY(date)}</td>
                         <td class="grp-rw-rec">${day.mr_mkt.toFixed(0)}</td><td class="grp-rw-rec">${day.mr_plt.toFixed(0)}</td><td class="grp-rw-rec"><b>${(day.mr_mkt+day.mr_plt).toFixed(0)}</b></td>
                         <td class="grp-rw-iss">${day.mi_mkt.toFixed(0)}</td><td class="grp-rw-iss">${day.mi_plt.toFixed(0)}</td><td class="grp-rw-iss"><b>${issueTotal.toFixed(0)}</b></td>
                         
@@ -368,7 +368,7 @@
                 openWip = prevIssueTotal > 0 ? (prevIssueTotal * (100 - (openRecPercent + 2.5)) / 100) : 0;
 
                 tbody.innerHTML += `<tr style="background-color: #fff9c4; font-weight: bold; color: #000;">
-                    <td>Opening</td>
+                    <td t="s">Opening</td>
                     <td class="grp-rw-rec">-</td><td class="grp-rw-rec">-</td><td class="grp-rw-rec">-</td>
                     <td class="grp-rw-iss">-</td><td class="grp-rw-iss">-</td><td class="grp-rw-iss">-</td>
                     
@@ -388,7 +388,7 @@
                 let finalTotalWip = sumWip + openWip;
 
                 tfoot.innerHTML = `<tr class="grand-total-row">
-                    <td>TOTAL</td>
+                    <td t="s">TOTAL</td>
                     <td class="grp-rw-rec">${sum.mrM.toFixed(0)}</td><td class="grp-rw-rec">${sum.mrP.toFixed(0)}</td><td class="grp-rw-rec">${(sum.mrM+sum.mrP).toFixed(0)}</td>
                     <td class="grp-rw-iss">${sum.miM.toFixed(0)}</td><td class="grp-rw-iss">${sum.miP.toFixed(0)}</td><td class="grp-rw-iss">${sumIssueTotal.toFixed(0)}</td>
                     
