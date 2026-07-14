@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NRV Denim - Fiber Recycling Plant Report</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #27ae60;
+            --accent: #e67e22;
+            --danger: #c0392b;
+            --light-bg: #f4f7f6;
+            --border: #dee2e6;
+            --footer-bg: #2c3e50;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--light-bg); }
+
+        /* Navigation Bar */
+        nav {
+            background-color: #000000;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .nav-link { color: white; text-decoration: none; font-weight: 500; font-size: 15px; transition: 0.3s; }
+        .nav-link:hover { color: var(--accent); }
+
+        /* Header Area */
+        .report-header {
+            background: white;
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .report-title h1 { margin: 0; font-size: 24px; color: var(--primary); letter-spacing: 1px; }
+        .report-title p { margin: 5px 0 0; color: var(--secondary); font-weight: bold; font-size: 12px; text-transform: uppercase; }
+
+        .container { padding: 20px 40px; max-width: 1600px; margin: 0 auto; }
+
+        /* KPI Cards Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .kpi-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary);
+        }
+        .kpi-card.green { border-left-color: var(--secondary); }
+        .kpi-card.orange { border-left-color: var(--accent); }
+        .kpi-card.red { border-left-color: var(--danger); }
+        .kpi-label { font-size: 11px; text-transform: uppercase; color: #7f8c8d; font-weight: bold; }
+        .kpi-value { font-size: 22px; font-weight: bold; color: var(--primary); margin-top: 5px; }
+        .kpi-sub { font-size: 11px; margin-top: 5px; color: #95a5a6; }
+
+        /* Control Bar */
+        .control-panel {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+        }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; }
+        .filter-group label { font-size: 11px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; }
+        input[type="month"], input[type="date"], select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 5px; background: white; font-family: inherit;}
+        
+        .btn { padding: 10px 18px; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-refresh { background: #34495e; color: white; }
+        .btn-excel { background: #1d6f42; color: white; }
+        .btn-print { background: #2980b9; color: white; }
+
+        /* Layout Tables Grid */
+        .tables-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        @media (max-width: 1024px) {
+            .tables-grid { grid-template-columns: 1fr; }
+        }
+
+        .table-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px;}
+        .table-card h2 { font-size: 16px; color: var(--primary); margin: 15px; border-left: 4px solid var(--secondary); padding-left: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8f9fa; color: #34495e; font-weight: 600; padding: 12px 15px; text-align: left; border-bottom: 2px solid #edf2f7; font-size: 12px; }
+        td { padding: 12px 15px; border-bottom: 1px solid #edf2f7; font-size: 13px; vertical-align: middle; color: #2d3748; }
+        
+        .foot-tr { background: var(--primary); }
+        .foot-tr td { color: #ffffff !important; font-weight: bold; padding: 12px; }
+
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-left: 5px;}
+        .badge-input { background: #ebf8ff; color: #2b6cb0; }
+        .badge-main { background: #c6f6d5; color: #22543d; }
+        .badge-waste { background: #fed7d7; color: #9b2c2c; }
+        
+        .val-primary { font-weight: bold; font-size: 13px; display: block; }
+        .val-sub { font-size: 11px; color: #718096; }
+
+        @media print {
+            nav, .control-panel, .btn { display: none !important; }
+            .container { padding: 0; width: 100%; }
+            .tables-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a href="index.html" class="nav-link"><i class="fa fa-home"></i> Return to Home 🏠</a>
+    <span style="color: #666; font-size: 12px; font-weight: bold;">NRV Denim ERP | Recycling Recovery Intelligence</span>
+</nav>
+
+<div class="report-header">
+    <div class="report-title">
+        <h1>NRV DENIM PRIVATE LIMITED</h1>
+        <p>Fiber Recycling Plant - Cost & Recovery Analysis</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn btn-excel" onclick="exportToExcel()"><i class="fa fa-file-excel"></i> Export Pro Excel</button>
+        <button class="btn btn-print" onclick="window.print()"><i class="fa fa-print"></i> Print Sheet</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="control-panel">
+        <div class="filter-group">
+            <label>Reporting Period</label>
+            <select id="periodType" onchange="togglePeriod(); loadRecyclingData()">
+                <option value="date">Specific Date</option>
+                <option value="month">Entire Month</option>
+            </select>
+        </div>
+        <div class="filter-group" id="dateFilterGroup">
+            <label>Target Date</label>
+            <input type="date" id="reportDate" onchange="loadRecyclingData()">
+        </div>
+        <div class="filter-group" id="monthFilterGroup" style="display: none;">
+            <label>Target Month</label>
+            <input type="month" id="reportMonth" onchange="loadRecyclingData()">
+        </div>
+        <button class="btn btn-refresh" onclick="loadRecyclingData()">
+            <i class="fa fa-sync-alt" id="refreshIcon"></i> Process Sheets
+        </button>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card green">
+            <div class="kpi-label">Total Recovery Rate</div>
+            <div class="kpi-value" id="kpiYield">0.00 %</div>
+            <div class="kpi-sub" id="kpiLossText">Loss Rate: 0.00%</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Total Material Feed</div>
+            <div class="kpi-value" id="kpiFeed">0.00 KG</div>
+            <div class="kpi-sub" id="kpiBales">0 Bales Total</div>
+        </div>
+        <div class="kpi-card orange">
+            <div class="kpi-label">Recovery Value Added</div>
+            <div class="kpi-value" id="kpiNetValue">₹ 0.00</div>
+            <div class="kpi-sub" id="kpiValueRatio">Multiplier Ratio: 0.00x</div>
+        </div>
+        <div class="kpi-card red">
+            <div class="kpi-label">Variance (Invisible Loss)</div>
+            <div class="kpi-value" id="kpiVariance">0.00 KG</div>
+            <div class="kpi-sub">Unaccounted dust/shrinkage</div>
+        </div>
+    </div>
+
+    <div class="tables-grid">
+        <div class="table-card">
+            <h2>1. RAW MATERIAL INPUTS (ISSUED TO RECYCLING)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Material/Waste Type</th>
+                        <th style="text-align: right;">Quantity</th>
+                        <th style="text-align: right;">Avg Unit Cost</th>
+                        <th style="text-align: right;">Total Value</th>
+                    </tr>
+                </thead>
+                <tbody id="inputTableBody">
+                    <tr><td colspan="5" style="text-align:center; padding: 20px;">Load period data to calculate balance...</td></tr>
+                </tbody>
+                <tfoot>
+                    <tr class="foot-tr" id="inputFooter">
+                        <td colspan="2">TOTAL INPUTS</td>
+                        <td style="text-align: right;" id="totInputQty">0.00 KG</td>
+                        <td>-</td>
+                        <td style="text-align: right;" id="totInputAmt">₹ 0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="table-card">
+            <h2>2. RECOVERED PRODUCTS & WASTAGE (OUTPUT)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Recovered Item Type</th>
+                        <th style="text-align: right;">Quantity</th>
+                        <th style="text-align: right;">Est. Market Price</th>
+                        <th style="text-align: right;">Yield Value</th>
+                    </tr>
+                </thead>
+                <tbody id="outputTableBody">
+                    <tr><td colspan="5" style="text-align:center; padding: 20px;">Load period data to calculate balance...</td></tr>
+                </tbody>
+                <tfoot>
+                    <tr class="foot-tr" id="outputFooter">
+                        <td colspan="2">TOTAL RECOVERY</td>
+                        <td style="text-align: right;" id="totOutputQty">0.00 KG</td>
+                        <td>-</td>
+                        <td style="text-align: right;" id="totOutputAmt">₹ 0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxTO3fc8hh7PBrLJI95YECv-H67eWbmzbyB7TDcgLRXGGg0ua-zzWVLMKKwe5jZS63iyw/exec';
+    
+    let rawInputs = [];
+    let rawOutputs = [];
+
+    window.onload = () => {
+        const today = new Date();
+        document.getElementById('reportDate').value = today.toISOString().split('T')[0];
+        document.getElementById('reportMonth').value = today.toISOString().slice(0, 7);
+        loadRecyclingData();
+    };
+
+    function togglePeriod() {
+        const type = document.getElementById('periodType').value;
+        document.getElementById('dateFilterGroup').style.display = type === 'date' ? 'flex' : 'none';
+        document.getElementById('monthFilterGroup').style.display = type === 'month' ? 'flex' : 'none';
+    }
+
+    async function loadRecyclingData() {
+        const icon = document.getElementById('refreshIcon');
+        icon.classList.add('fa-spin');
+
+        const periodType = document.getElementById('periodType').value;
+        const targetDate = document.getElementById('reportDate').value;
+        const targetMonth = document.getElementById('reportMonth').value;
+
+        try {
+            const [rR, rI] = await Promise.all([
+                fetch(`${API_URL}?Department=RAW_MATERIAL_REC&t=${Date.now()}`), 
+                fetch(`${API_URL}?Department=RAW_MATERIAL_ISSUE&t=${Date.now()}`)
+            ]);
+            
+            const receipts = await rR.json(); 
+            const issues = await rI.json();
+
+            filterData(receipts, issues, periodType, targetDate, targetMonth);
+            calculateAndRender();
+        } catch(e) {
+            console.error(e);
+            alert("Error communicating with ERP database. Please check connection.");
+        } finally {
+            icon.classList.remove('fa-spin');
+        }
+    }
+
+    // Helper Function to Aggregate Sums
+    function aggregateData(dataArray, periodType, targetDate, targetMonth) {
+        const grouped = {};
+        const displayDate = periodType === 'month' ? targetMonth : targetDate;
+
+        dataArray.forEach(item => {
+            // Create a unique key using Description, Category and Tag
+            const key = item["Item Description"] + "|" + item["Category"] + "|" + (item.outputTag || "");
+
+            if (!grouped[key]) {
+                // First time seeing this item, create a new object clone
+                grouped[key] = { ...item };
+                grouped[key].displayDate = displayDate;
+                grouped[key]["Qty (KG)"] = parseFloat(item["Qty (KG)"] || 0);
+                grouped[key]["Bales"] = parseFloat(item["Bales"] || 0);
+                grouped[key]["Total Amount"] = parseFloat(item["Total Amount"] || 0);
+            } else {
+                // Item exists, add to existing totals
+                grouped[key]["Qty (KG)"] += parseFloat(item["Qty (KG)"] || 0);
+                grouped[key]["Bales"] += parseFloat(item["Bales"] || 0);
+                grouped[key]["Total Amount"] += parseFloat(item["Total Amount"] || 0);
+            }
+        });
+
+        return Object.values(grouped);
+    }
+
+    function filterData(receipts, issues, periodType, targetDate, targetMonth) {
+        let tempInputs = [];
+        let tempOutputs = [];
+
+        // 1. INPUT LOGIC (Issues to Plant)
+        issues.forEach(item => {
+            if(!item["Date"]) return;
+            const itemDateStr = item["Date"].split('T')[0];
+            const itemMonth = itemDateStr.slice(0, 7);
+            
+            const matchPeriod = (periodType === 'date' && itemDateStr === targetDate) || 
+                                (periodType === 'month' && itemMonth === targetMonth);
+
+            const isToRecycler = item["Issuing To (Dept)"] && 
+                                 item["Issuing To (Dept)"].toUpperCase().includes("RECYCLING");
+
+            if (matchPeriod && isToRecycler) {
+                tempInputs.push(item);
+            }
+        });
+
+        // 2. OUTPUT LOGIC (Recovered Products & Waste)
+        receipts.forEach(item => {
+            if(!item["Date"]) return;
+            const itemDateStr = item["Date"].split('T')[0];
+            const itemMonth = itemDateStr.slice(0, 7);
+
+            const matchPeriod = (periodType === 'date' && itemDateStr === targetDate) || 
+                                (periodType === 'month' && itemMonth === targetMonth);
+
+            const cat = (item["Category"] || "").toUpperCase().trim();
+            const desc = (item["Item Description"] || "").toUpperCase().trim();
+
+            const isRecyclingOutput = cat.includes("FIBER RECYCLING");
+
+            if (matchPeriod && isRecyclingOutput) {
+                if (desc.includes("RECYCLED FIBER")) {
+                    item.outputTag = "MAIN PRODUCT";
+                } else {
+                    item.outputTag = "WASTE";
+                }
+                tempOutputs.push(item);
+            }
+        });
+
+        // 3. AGGREGATE FINAL ARRAYS
+        rawInputs = aggregateData(tempInputs, periodType, targetDate, targetMonth);
+        rawOutputs = aggregateData(tempOutputs, periodType, targetDate, targetMonth);
+    }
+
+    function calculateAndRender() {
+        const inpTbody = document.getElementById('inputTableBody');
+        const outTbody = document.getElementById('outputTableBody');
+        
+        inpTbody.innerHTML = "";
+        outTbody.innerHTML = "";
+
+        let totalInpQty = 0, totalInpBales = 0, totalInpAmt = 0;
+        let totalOutQty = 0, totalOutBales = 0, totalOutAmt = 0;
+
+        // Populate Raw Material Inputs (Table 1)
+        if (rawInputs.length === 0) {
+            inpTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#95a5a6;">No waste raw materials issued for this period.</td></tr>`;
+        } else {
+            rawInputs.forEach(item => {
+                const qty = item["Qty (KG)"];
+                const bales = item["Bales"];
+                const val = item["Total Amount"];
+                const unitCost = qty > 0 ? val / qty : 0; // Calculates precise weighted average unit cost
+                
+                totalInpQty += qty;
+                totalInpBales += bales;
+                totalInpAmt += val;
+
+                inpTbody.innerHTML += `
+                    <tr>
+                        <td>${item.displayDate}</td>
+                        <td>
+                            <span class="val-primary">${item["Item Description"]}</span>
+                            <span class="badge badge-input">${item["Category"]}</span>
+                        </td>
+                        <td style="text-align: right;">
+                            <span class="val-primary">${qty.toLocaleString(undefined, {minimumFractionDigits: 2})} KG</span>
+                            <span class="val-sub">${bales} Bales</span>
+                        </td>
+                        <td style="text-align: right;">₹ ${unitCost.toFixed(2)} / KG</td>
+                        <td style="text-align: right; font-weight: bold;">₹ ${val.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    </tr>`;
+            });
+        }
+
+        // Populate Yield Output Recovery (Table 2)
+        if (rawOutputs.length === 0) {
+            outTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#95a5a6;">No recycled items or waste recorded.</td></tr>`;
+        } else {
+            rawOutputs.forEach(item => {
+                const qty = item["Qty (KG)"];
+                const bales = item["Bales"];
+                const val = item["Total Amount"];
+                const unitVal = qty > 0 ? val / qty : 0; // Calculates precise weighted average unit cost
+
+                totalOutQty += qty;
+                totalOutBales += bales;
+                totalOutAmt += val;
+
+                const badgeClass = item.outputTag === "MAIN PRODUCT" ? "badge-main" : "badge-waste";
+
+                outTbody.innerHTML += `
+                    <tr>
+                        <td>${item.displayDate}</td>
+                        <td>
+                            <span class="val-primary">${item["Item Description"]} <span class="badge ${badgeClass}">${item.outputTag}</span></span>
+                            <span class="val-sub">${item["Category"]}</span>
+                        </td>
+                        <td style="text-align: right;">
+                            <span class="val-primary">${qty.toLocaleString(undefined, {minimumFractionDigits: 2})} KG</span>
+                            <span class="val-sub">${bales} Bales</span>
+                        </td>
+                        <td style="text-align: right;">₹ ${unitVal.toFixed(2)} / KG</td>
+                        <td style="text-align: right; font-weight: bold; color: var(--secondary);">₹ ${val.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    </tr>`;
+            });
+        }
+
+        // Calculation Metrics
+        const yieldRate = totalInpQty > 0 ? (totalOutQty / totalInpQty) * 100 : 0;
+        const lossWeight = totalInpQty - totalOutQty;
+        const lossRate = totalInpQty > 0 ? (lossWeight / totalInpQty) * 100 : 0;
+        const netValueRecovery = totalOutAmt - totalInpAmt;
+        const multiplier = totalInpAmt > 0 ? totalOutAmt / totalInpAmt : 0;
+
+        // Render Totals & Card KPIs
+        document.getElementById('totInputQty').innerText = `${totalInpQty.toLocaleString(undefined, {minimumFractionDigits: 2})} KG`;
+        document.getElementById('totInputAmt').innerText = `₹ ${totalInpAmt.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        document.getElementById('totOutputQty').innerText = `${totalOutQty.toLocaleString(undefined, {minimumFractionDigits: 2})} KG`;
+        document.getElementById('totOutputAmt').innerText = `₹ ${totalOutAmt.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+
+        // KPIs Updates
+        document.getElementById('kpiYield').innerText = `${yieldRate.toFixed(2)} %`;
+        document.getElementById('kpiLossText').innerText = `Process Invisible Loss: ${lossRate.toFixed(2)}%`;
+        document.getElementById('kpiFeed').innerText = `${totalInpQty.toLocaleString(undefined, {minimumFractionDigits: 2})} KG`;
+        document.getElementById('kpiBales').innerText = `${totalInpBales + totalOutBales} Total Bales Handled`;
+        
+        const recValNode = document.getElementById('kpiNetValue');
+        recValNode.innerText = `${netValueRecovery >= 0 ? '+' : ''} ₹ ${netValueRecovery.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        recValNode.style.color = netValueRecovery >= 0 ? 'var(--secondary)' : 'var(--danger)';
+        document.getElementById('kpiValueRatio').innerText = `Value Multiplier: ${multiplier.toFixed(2)}x (Value Added)`;
+
+        const varNode = document.getElementById('kpiVariance');
+        varNode.innerText = `${lossWeight.toLocaleString(undefined, {minimumFractionDigits: 2})} KG`;
+        varNode.style.color = lossWeight >= 0 ? 'var(--accent)' : 'var(--secondary)';
+    }
+
+    function exportToExcel() {
+        const data = [
+            ["FIBER RECYCLING BALANCES & RECOVERY REPORT"],
+            ["Generated on: " + new Date().toLocaleString()],
+            [],
+            ["1. RAW MATERIAL INPUTS"],
+            ["Date", "Item Description", "Category", "Quantity (KG)", "Bales", "Total Cost Value"],
+        ];
+
+        rawInputs.forEach(x => {
+            data.push([x.displayDate, x["Item Description"], x["Category"], x["Qty (KG)"], x["Bales"], x["Total Amount"]]);
+        });
+
+        data.push([]);
+        data.push(["2. RECOVERED PRODUCTS OUTPUT"]);
+        data.push(["Date", "Item Description", "Category", "Output Type", "Quantity (KG)", "Bales", "Est Market Value"]);
+
+        rawOutputs.forEach(x => {
+            data.push([x.displayDate, x["Item Description"], x["Category"], x.outputTag, x["Qty (KG)"], x["Bales"], x["Total Amount"]]);
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Recycling Plant Balance");
+        
+        const periodStr = document.getElementById('periodType').value === 'month' ? document.getElementById('reportMonth').value : document.getElementById('reportDate').value;
+        XLSX.writeFile(wb, `Fiber_Recycling_Analysis_${periodStr}.xlsx`);
+    }
+</script>
+</body>
+</html>
