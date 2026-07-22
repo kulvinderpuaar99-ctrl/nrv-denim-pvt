@@ -355,7 +355,7 @@
                     
                     // Calculate WIP from the previous cumulative sum just as it works for the total row
                     let openYnRecPercent = prev_rm_iss > 0 ? (((prev_yn_prd + prev_yn_wst + prev_yn_dst) / prev_rm_iss) * 100) : 0;
-                    openYnWip = prev_rm_iss > 0 ? (prev_rm_iss * (100 - (openYnRecPercent + 1.5)) / 100) : 0;
+                    openYnWip = prev_rm_iss > 0 ? (prev_rm_iss * (100 - (openYnRecPercent + 1)) / 100) : 0;
 
                     tbody.innerHTML += `<tr style="background-color: #fff9c4; font-weight: bold; color: #000;">
                         <td>Opening</td>
@@ -390,7 +390,7 @@
 
                     // U-3 Yarn Calculations based on Issue Raw Material
                     let ynRecPercent = rmIssTotal > 0 ? (((day.yn_prd_yarn + day.yn_prd_wst + day.yn_prd_dst) / rmIssTotal) * 100) : 0;
-                    let ynWip = rmIssTotal > 0 ? (rmIssTotal * (100 - (ynRecPercent + 1.5)) / 100) : 0;
+                    let ynWip = rmIssTotal > 0 ? (rmIssTotal * (100 - (ynRecPercent + 1)) / 100) : 0;
 
                     tbody.innerHTML += `<tr>
                         <td>${date}</td>
@@ -407,7 +407,7 @@
             // Safety check: Ensure opening prints even if the selected month has absolutely no daily records yet
             if (!hasPrintedOpening) {
                 let openYnRecPercent = prev_rm_iss > 0 ? (((prev_yn_prd + prev_yn_wst + prev_yn_dst) / prev_rm_iss) * 100) : 0;
-                openYnWip = prev_rm_iss > 0 ? (prev_rm_iss * (100 - (openYnRecPercent + 1.5)) / 100) : 0;
+                openYnWip = prev_rm_iss > 0 ? (prev_rm_iss * (100 - (openYnRecPercent + 1)) / 100) : 0;
 
                  tbody.innerHTML += `<tr style="background-color: #fff9c4; font-weight: bold; color: #000;">
                     <td>Opening</td>
@@ -424,7 +424,7 @@
                 let sumRmIssTot = sum.rmCI + sum.rmFI + sum.rmRI;
 
                 let sumYnRecPercent = sumRmIssTot > 0 ? (((sum.ynPY + sum.ynPW + sum.ynPD) / sumRmIssTot) * 100) : 0;
-                let sumYnWip = sumRmIssTot > 0 ? (sumRmIssTot * (100 - (sumYnRecPercent + 1.5)) / 100) : 0;
+                let sumYnWip = sumRmIssTot > 0 ? (sumRmIssTot * (100 - (sumYnRecPercent + 1)) / 100) : 0;
                 
                 let finalTotalWip = sumYnWip + openYnWip;
 
