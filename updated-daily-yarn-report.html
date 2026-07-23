@@ -123,7 +123,7 @@
 <body onload="initReport()">
 
 <div class="container">
-    <a href="index.html" class="btn-home-nav no-print">🏠 Return Home</a>
+    <a href="index.html" class="btn-home-nav no-print">← Return Home</a>
     
     <div class="header-section">
         <h1 class="company-name">NRV DENIM PRIVATE LIMITED</h1>
@@ -137,9 +137,9 @@
                 <input type="month" id="reportMonth" onchange="loadReport()">
             </div>
             <div class="btn-group">
-                <button class="action-btn btn-refresh" onclick="loadReport()">🔄 Refresh</button>
-                <button class="action-btn btn-excel" onclick="exportToExcel()">📊 Excel</button>
-                <button class="action-btn btn-print" onclick="window.print()">🖨️ Print</button>
+                <button class="action-btn btn-refresh" onclick="loadReport()">↻ Refresh</button>
+                <button class="action-btn btn-excel" onclick="exportToExcel()">↓ Excel</button>
+                <button class="action-btn btn-print" onclick="window.print()">🖨 Print</button>
             </div>
         </div>
 
@@ -281,7 +281,6 @@
                 
                 if(cat.includes("YARN")) dailyData[d].yn_iss_yarn += qty;
                 else if(cat.includes("WASTE") || cat.includes("FLAT")) dailyData[d].yn_iss_wst += qty;
-                else if(cat.includes("DUST")) dailyData[d].yn_iss_dst += qty;
             });
 
             // Process Raw Material Receipts (Recycled Fiber, OE Plant Waste, and OE Dust)
@@ -298,7 +297,6 @@
                     dailyData[d].rm_rf_rec += qty;
                 }
                 
-                // Logic updated to find OE Plant Waste and OE Dust from the RAW_MATERIAL_REC tab
                 if(supplier.includes("UNIT-3") && cat === "PLANT WASTE") {
                     if (item !== "MICRO DUST") {
                         dailyData[d].yn_prd_wst += qty;
@@ -308,18 +306,23 @@
                 }
             });
 
-            // Process Raw Material Issues (Recycled Fiber only for OE Plant Unit no 3)
+            // Process Raw Material Issues
             rawIss.forEach(i => {
                 if(!i["Date"]) return;
                 const d = i["Date"].split('T')[0];
                 ensureDate(d);
                 const qty = parseFloat(i["Qty (KG)"] || 0);
                 const item = (i["Item Description"] || "").trim().toUpperCase();
+                const cat = (i["Category"] || "").trim().toUpperCase();
                 const issuingTo = (i["Issuing To (Dept)"] || "").trim();
                 
-                // Only add to rm_rf_iss if Item is Recycled Fiber AND Issued to OE Plant Unit no 3
                 if(item === "RECYCLED FIBER" && issuingTo === "OE Plant Unit no 3") {
                     dailyData[d].rm_rf_iss += qty;
+                }
+
+                // OE Dust for Yarn & Waste Issue Or Sale Report (Issuing To: In House Transfer, Category: Plant Waste, Item Description: Micro Dust)
+                if(issuingTo.toUpperCase() === "IN HOUSE TRANSFER" && cat === "PLANT WASTE" && item === "MICRO DUST") {
+                    dailyData[d].yn_iss_dst += qty;
                 }
             });
 
