@@ -238,7 +238,8 @@
             const ensureDate = (d) => {
                 if(!dailyData[d]) dailyData[d] = { 
                     mr_mkt:0, mr_plt:0, mi_mkt:0, mi_plt_fiber:0, mi_plt_other:0, 
-                    prd_fib:0, prd_gut:0, prd_kb:0, prd_md:0, iss_fib:0, sale_gut:0, sale_kb:0, iss_md:0
+                    prd_fib:0, prd_gut:0, prd_kb:0, prd_md:0, iss_fib:0, sale_gut:0, sale_kb:0, iss_md:0,
+                    mi_mkt_other:0, mi_plt_other_pure:0
                 };
             };
 
@@ -275,13 +276,21 @@
                 const item = (i["Item Description"] || "").trim().toUpperCase();
                 const issuingTo = (i["Issuing To (Dept)"] || "").trim().toUpperCase();
                 
-                if(cat === "MARKET PURCHASE WASTE") dailyData[d].mi_mkt += qty;
+                if(cat === "MARKET PURCHASE WASTE") {
+                    if(issuingTo === "FIBER RECYCLING PLANT") {
+                        dailyData[d].mi_mkt += qty;
+                    } else {
+                        dailyData[d].mi_plt_other += qty;
+                        dailyData[d].mi_mkt_other += qty;
+                    }
+                }
                 else if(cat === "PLANT WASTE") {
                     if(item !== "MICRO DUST" && item !== "ROTAR FILTER" && item !== "HARD WASTE") {
                         if(issuingTo === "FIBER RECYCLING PLANT") {
                             dailyData[d].mi_plt_fiber += qty;
                         } else {
                             dailyData[d].mi_plt_other += qty;
+                            dailyData[d].mi_plt_other_pure += qty;
                         }
                     }
                 }
@@ -344,9 +353,9 @@
                     hasPrintedOpening = true;
                 }
 
-                // Accumulating Stocks - Deducting all plant waste issues for the stock calculation
-                runMkt += (day.mr_mkt - day.mi_mkt);
-                runPlt += (day.mr_plt - (day.mi_plt_fiber + day.mi_plt_other));
+                // Accumulating Stocks - Deducting issues dynamically based on item origin category
+                runMkt += (day.mr_mkt - (day.mi_mkt + day.mi_mkt_other));
+                runPlt += (day.mr_plt - (day.mi_plt_fiber + day.mi_plt_other_pure));
                 runFib += (day.prd_fib - day.iss_fib);
                 runGut += (day.prd_gut - day.sale_gut);
                 runKB += (day.prd_kb - day.sale_kb);
