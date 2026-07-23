@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NRV Denim - Daily Stock Report</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f4f8; color: #2c3e50; }
+        
+        .container { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); 
+            max-width: 99%; 
+            margin: 10px auto; 
+            position: relative;
+        }
+
+        .header-section { text-align: center; margin-bottom: 15px; position: relative; }
+        .company-name { margin: 0; font-size: 24px; font-weight: bold; }
+        .report-title { color: #1565c0; font-weight: bold; margin: 5px 0; letter-spacing: 2px; font-size: 14px; }
+
+        /* Professional Home Button */
+        .btn-home-nav {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #ecf0f1;
+            color: #2c3e50;
+            padding: 8px 16px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        .btn-home-nav:hover { background: #dcdde1; border-color: #7f8c8d; }
+
+        .controls {
+            display: flex; 
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-top: 25px;
+        }
+        .control-row { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px; }
+        
+        .visibility-filters {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .filter-item { font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #2c3e50; }
+
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 10px; font-weight: bold; color: #636e72; margin-bottom: 3px; text-transform: uppercase; }
+        input[type="month"] { padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; width: 160px; }
+
+        .btn-group { display: flex; gap: 8px; }
+        .action-btn { 
+            padding: 8px 16px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 12px; 
+            color: white; 
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-refresh { background: #3498db; }
+        .btn-excel { background: #27ae60; }
+        .btn-print { background: #e74c3c; }
+
+        /* Table Styling with Light Headers */
+        .table-wrapper { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; table-layout: auto; color: #000; }
+        
+        /* General header style - updated for wrapping text */
+        th { 
+            background: #f2f2f2; 
+            color: #000; 
+            padding: 6px 2px; 
+            border: 1px solid #aaa; 
+            text-align: center; 
+            white-space: normal; 
+            overflow-wrap: break-word; 
+            max-width: 75px; 
+        }
+        
+        /* Light Version of Categorized Colors */
+        .head-jw-iss { background: #ffccbc !important; } /* Light Deep Orange for Job Work */
+        .head-jw-rec { background: #c5cae9 !important; } /* Light Indigo for Job Work Rec */
+
+        td { padding: 6px 2px; border: 1px solid #ccc; text-align: center; }
+        tr:nth-child(even) { background-color: #fcfcfc; }
+        
+        .grand-total-row { background: #dfe6e9 !important; color: #000 !important; font-weight: bold; }
+        .grand-total-row td { border: 1.5px solid #000; }
+
+        .hidden { display: none !important; }
+
+        @media print {
+            @page { size: landscape; margin: 0.4cm; }
+            body { background: white; margin: 0; padding: 0; color: #000 !important; }
+            .container { box-shadow: none; border: none; width: 100%; max-width: 100%; margin: 0; padding: 0; }
+            .controls, .btn-group, .visibility-filters, .no-print, .btn-home-nav { display: none !important; }
+            
+            table { width: 100% !important; font-size: 9pt !important; border-collapse: collapse !important; }
+            th { color: #000 !important; font-weight: bold !important; border: 1pt solid #000 !important; -webkit-print-color-adjust: exact !important; }
+            td { color: #000 !important; font-weight: 600 !important; border: 1pt solid #000 !important; padding: 4px 2px !important; }
+        }
+    </style>
+</head>
+<body onload="initReport()">
+
+<div class="container">
+    <a href="index.html" class="btn-home-nav no-print">← Return Home</a>
+    
+    <div class="header-section">
+        <h1 class="company-name">NRV DENIM PRIVATE LIMITED</h1>
+        <p class="report-title">DAILY WASTE & RECYCLING SUMMARY REPORT</p>
+    </div>
+
+    <div class="controls no-print">
+        <div class="control-row">
+            <div class="form-group">
+                <label>Reporting Month</label>
+                <input type="month" id="reportMonth" onchange="loadReport()">
+            </div>
+            <div class="btn-group">
+                <button class="action-btn btn-refresh" onclick="loadReport()">↻ Refresh</button>
+                <button class="action-btn btn-excel" onclick="exportToExcel()">↓ Excel</button>
+                <button class="action-btn btn-print" onclick="window.print()">🖨 Print</button>
+            </div>
+        </div>
+
+        <div class="visibility-filters">
+            <b style="font-size: 13px; margin-right: 10px; color: #d63031;">Group Filters:</b>
+            <label class="filter-item">
+                <input type="checkbox" checked onchange="toggleGroup(this, ['grp-jw-iss', 'grp-jw-rec'])"> Job Work Data
+            </label>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="mainReportTable">
+            <thead>
+                <tr>
+                    <th rowspan="2">Date</th>
+                    <th colspan="3" class="grp-jw-iss head-jw-iss">Job Work Issue</th>
+                    <th colspan="4" class="grp-jw-rec head-jw-rec">Job Work Rec.</th>
+                </tr>
+                <tr>
+                    <th class="grp-jw-iss head-jw-iss">Mkt Purchase</th><th class="grp-jw-iss head-jw-iss">Plant Waste</th><th class="grp-jw-iss head-jw-iss">Total</th>
+                    <th class="grp-jw-rec head-jw-rec">Recycled Fiber</th><th class="grp-jw-rec head-jw-rec">Waste</th><th class="grp-jw-rec head-jw-rec">Total Yield %</th><th class="grp-jw-rec head-jw-rec">WIP</th>
+                </tr>
+            </thead>
+            <tbody id="reportDataBody"></tbody>
+            <tfoot id="reportFooter"></tfoot>
+        </table>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxTO3fc8hh7PBrLJI95YECv-H67eWbmzbyB7TDcgLRXGGg0ua-zzWVLMKKwe5jZS63iyw/exec';
+
+    function toggleGroup(checkbox, classNamesArray) {
+        classNamesArray.forEach(className => {
+            const cols = document.getElementsByClassName(className);
+            for(let col of cols) {
+                if (checkbox.checked) col.classList.remove('hidden');
+                else col.classList.add('hidden');
+            }
+        });
+    }
+
+    function initReport() {
+        const today = new Date().toISOString().slice(0, 7);
+        document.getElementById('reportMonth').value = today;
+        loadReport();
+    }
+
+    function formatDateToDMY(dateString) {
+        if(!dateString) return '';
+        const parts = dateString.split('-');
+        if(parts.length !== 3) return dateString;
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    async function loadReport() {
+        const tbody = document.getElementById('reportDataBody');
+        const tfoot = document.getElementById('reportFooter');
+        const selectedMonth = document.getElementById('reportMonth').value;
+        if(!selectedMonth) return;
+        
+        tbody.innerHTML = "<tr><td colspan='8'>Syncing with server...</td></tr>";
+
+        try {
+            const [respRec, respIss] = await Promise.all([
+                fetch(`${API_URL}?Department=RAW_MATERIAL_REC&t=${Date.now()}`),
+                fetch(`${API_URL}?Department=RAW_MATERIAL_ISSUE&t=${Date.now()}`)
+            ]);
+            
+            const rawRec = await respRec.json();
+            const rawIss = await respIss.json();
+
+            let dailyData = {};
+            const ensureDate = (d) => {
+                if(!dailyData[d]) dailyData[d] = { 
+                    jwi_mkt:0, jwi_plt:0, jwr_fib:0, jwr_waste:0
+                };
+            };
+
+            // Process Raw Material Receipts
+            rawRec.forEach(r => {
+                if(!r["Date"]) return;
+                const d = r["Date"].split('T')[0];
+                ensureDate(d);
+                const qty = parseFloat(r["Qty (KG)"] || 0);
+                const cat = (r["Category"] || "").trim().toUpperCase();
+                const item = (r["Item Description"] || "").trim().toUpperCase();
+
+                if(cat === "JOB WORK") {
+                    if(item === "RECYCLED FIBER") {
+                        dailyData[d].jwr_fib += qty;
+                    } else {
+                        dailyData[d].jwr_waste += qty;
+                    }
+                }
+            });
+
+            // Process Raw Material Issues
+            rawIss.forEach(i => {
+                if(!i["Date"]) return;
+                const d = i["Date"].split('T')[0];
+                ensureDate(d);
+                const qty = parseFloat(i["Qty (KG)"] || 0);
+                const cat = (i["Category"] || "").trim().toUpperCase();
+                const item = (i["Item Description"] || "").trim().toUpperCase();
+                const issuingTo = (i["Issuing To (Dept)"] || "").trim().toUpperCase();
+                
+                if(cat === "MARKET PURCHASE WASTE") {
+                    if(issuingTo === "JOB WORK") {
+                        dailyData[d].jwi_mkt += qty;
+                    } 
+                }
+                else if(cat === "PLANT WASTE") {
+                    if(item !== "MICRO DUST" && item !== "ROTAR FILTER" && item !== "HARD WASTE") {
+                        if(issuingTo === "JOB WORK") {
+                            dailyData[d].jwi_plt += qty;
+                        }
+                    }
+                }
+            });
+
+            tbody.innerHTML = "";
+            
+            // Trackers for Job Work Opening WIP
+            let prev_jw_iss_mkt = 0, prev_jw_iss_plt = 0;
+            let prev_jw_rec_fib = 0, prev_jw_rec_waste = 0;
+            let openJwWip = 0;
+
+            let sum = { 
+                jwIM:0, jwIP:0, jwRF:0, jwRW:0
+            };
+
+            let hasPrintedOpening = false;
+            const allDates = Object.keys(dailyData).sort();
+            
+            allDates.forEach(date => {
+                const day = dailyData[date];
+
+                // Capture all data PRIOR to the selected month for opening WIP calc
+                if (date < selectedMonth + "-01") {
+                    prev_jw_iss_mkt += day.jwi_mkt;
+                    prev_jw_iss_plt += day.jwi_plt;
+                    prev_jw_rec_fib += day.jwr_fib;
+                    prev_jw_rec_waste += day.jwr_waste;
+                }
+
+                // Insert Opening Balance Row before processing the first date of the selected month
+                if (date >= selectedMonth + "-01" && !hasPrintedOpening) {
+                    
+                    // Calculate Job Work Opening WIP
+                    let prevJwIssueTotal = prev_jw_iss_mkt + prev_jw_iss_plt;
+                    let prevJwRecTotal = prev_jw_rec_fib + prev_jw_rec_waste;
+                    openJwWip = prevJwIssueTotal - prevJwRecTotal;
+
+                    tbody.innerHTML += `<tr style="background-color: #fff9c4; font-weight: bold; color: #000;">
+                        <td t="s">Opening</td>
+                        <td class="grp-jw-iss">-</td><td class="grp-jw-iss">-</td><td class="grp-jw-iss">-</td>
+                        <td class="grp-jw-rec">-</td><td class="grp-jw-rec">-</td><td class="grp-jw-rec">-</td><td class="grp-jw-rec"><b>${openJwWip.toFixed(0)}</b></td>
+                    </tr>`;
+                    hasPrintedOpening = true;
+                }
+
+                if(date.startsWith(selectedMonth)) {
+                    sum.jwIM += day.jwi_mkt; sum.jwIP += day.jwi_plt; sum.jwRF += day.jwr_fib; sum.jwRW += day.jwr_waste;
+                    
+                    // Job Work specific math
+                    let jwIssueTotal = day.jwi_mkt + day.jwi_plt;
+                    let jwRecTotal = day.jwr_fib + day.jwr_waste;
+                    let jwYield = jwIssueTotal > 0 ? (jwRecTotal / jwIssueTotal) * 100 : 0;
+                    let jwWip = jwIssueTotal - jwRecTotal;
+
+                    tbody.innerHTML += `<tr>
+                        <td t="s">${formatDateToDMY(date)}</td>
+                        <td class="grp-jw-iss">${day.jwi_mkt.toFixed(0)}</td><td class="grp-jw-iss">${day.jwi_plt.toFixed(0)}</td><td class="grp-jw-iss"><b>${jwIssueTotal.toFixed(0)}</b></td>
+                        <td class="grp-jw-rec">${day.jwr_fib.toFixed(0)}</td><td class="grp-jw-rec">${day.jwr_waste.toFixed(0)}</td><td class="grp-jw-rec">${jwYield.toFixed(2)}%</td><td class="grp-jw-rec"><b>${jwWip.toFixed(0)}</b></td>
+                    </tr>`;
+                }
+            });
+            
+            // Safety check: Ensure opening prints even if the selected month has absolutely no daily records yet
+            if (!hasPrintedOpening) {
+                let prevJwIssueTotal = prev_jw_iss_mkt + prev_jw_iss_plt;
+                let prevJwRecTotal = prev_jw_rec_fib + prev_jw_rec_waste;
+                openJwWip = prevJwIssueTotal - prevJwRecTotal;
+
+                tbody.innerHTML += `<tr style="background-color: #fff9c4; font-weight: bold; color: #000;">
+                    <td t="s">Opening</td>
+                    <td class="grp-jw-iss">-</td><td class="grp-jw-iss">-</td><td class="grp-jw-iss">-</td>
+                    <td class="grp-jw-rec">-</td><td class="grp-jw-rec">-</td><td class="grp-jw-rec">-</td><td class="grp-jw-rec"><b>${openJwWip.toFixed(0)}</b></td>
+                </tr>`;
+            }
+
+            if(allDates.some(d => d.startsWith(selectedMonth))) {
+                let sumJwIssueTotal = sum.jwIM + sum.jwIP;
+                let sumJwRecTotal = sum.jwRF + sum.jwRW;
+                let sumJwYield = sumJwIssueTotal > 0 ? (sumJwRecTotal / sumJwIssueTotal) * 100 : 0;
+                let finalJwWip = (sumJwIssueTotal - sumJwRecTotal) + openJwWip;
+
+                tfoot.innerHTML = `<tr class="grand-total-row">
+                    <td t="s">TOTAL</td>
+                    <td class="grp-jw-iss">${sum.jwIM.toFixed(0)}</td><td class="grp-jw-iss">${sum.jwIP.toFixed(0)}</td><td class="grp-jw-iss">${sumJwIssueTotal.toFixed(0)}</td>
+                    <td class="grp-jw-rec">${sum.jwRF.toFixed(0)}</td><td class="grp-jw-rec">${sum.jwRW.toFixed(0)}</td><td class="grp-jw-rec">${sumJwYield.toFixed(2)}%</td><td class="grp-jw-rec"><b>${finalJwWip.toFixed(0)}</b></td>
+                </tr>`;
+            }
+        } catch(e) { tbody.innerHTML = "<tr><td colspan='8' style='color:red;'>Error loading data.</td></tr>"; }
+    }
+
+    function exportToExcel() {
+        XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById("mainReportTable")), `Daily_Summary_${document.getElementById('reportMonth').value}.xlsx`);
+    }
+</script>
+</body>
+</html>
