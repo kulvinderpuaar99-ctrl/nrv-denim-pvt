@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Scanner to Google Sheets</title>
+    <!-- Include the HTML5-QRCode scanning library via CDN -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+        h2 { color: #333; }
+        #reader {
+            width: 100%;
+            max-width: 500px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: #fff;
+            padding: 10px;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #666;
+            text-align: center;
+        }
+        .success { color: #2ecc71 !important; }
+        .error { color: #e74c3c !important; }
+    </style>
+</head>
+<body>
+
+    <h2>QR Code Scanner</h2>
+    <div id="reader"></div>
+    <div id="status">Ready to scan...</div>
+
+    <script>
+        // paste your Google Apps Script Web App URL here
+        const WEB_APP_URL = "YOUR_WEB_APP_URL_HERE"; 
+        
+        let lastScannedCode = "";
+        let isSubmitting = false;
+
+        function onScanSuccess(decodedText, decodedResult) {
+            // Prevent duplicate scans while processing a submission
+            if (isSubmitting || decodedText === lastScannedCode) return;
+            
+            isSubmitting = true;
+            lastScannedCode = decodedText;
+            
+            const statusDiv = document.getElementById("status");
+            statusDiv.className = "";
+            statusDiv.innerText = "Sending data to Google Sheets...";
+
+            // Prepare form data to bypass CORS complications with Apps Script
+            const formData = new URLSearchParams();
+            formData.append("qrData", decodedText);
+
+            fetch(WEB_APP_URL, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === "success") {
+                    statusDiv.className = "success";
+                    statusDiv.innerText = `Successfully Saved: "${decodedText}"`;
+                } else {
+                    statusDiv.className = "error";
+                    statusDiv.innerText = "Error saving data.";
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                statusDiv.className = "error";
+                statusDiv.innerText = "Network error. Failed to save.";
+            })
+            .finally(() => {
+                // Allow scanning again after 3 seconds
+                setTimeout(() => {
+                    isSubmitting = false;
+                    lastScannedCode = "";
+                    if(statusDiv.className !== "success") {
+                        statusDiv.innerText = "Ready to scan...";
+                    }
+                }, 3000);
+            });
+        }
+
+        // Initialize the QR Code scanner component
+        const html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", 
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            /* verbose= */ false
+        );
+        html5QrcodeScanner.render(onScanSuccess);
+    </script>
+</body>
+</html>
