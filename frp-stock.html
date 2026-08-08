@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NRV Denim - Daily Stock Report</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f4f8; color: #2c3e50; }
+        
+        .container { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); 
+            max-width: 99%; 
+            margin: 10px auto; 
+            position: relative;
+        }
+
+        .header-section { text-align: center; margin-bottom: 15px; position: relative; }
+        .company-name { margin: 0; font-size: 24px; font-weight: bold; }
+        .report-title { color: #1565c0; font-weight: bold; margin: 5px 0; letter-spacing: 2px; font-size: 14px; }
+
+        /* Professional Home Button */
+        .btn-home-nav {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #ecf0f1;
+            color: #2c3e50;
+            padding: 8px 16px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        .btn-home-nav:hover { background: #dcdde1; border-color: #7f8c8d; }
+
+        .controls {
+            display: flex; 
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-top: 25px;
+        }
+        .control-row { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px; }
+        
+        .visibility-filters {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .filter-item { font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 5px; cursor: pointer; color: #2c3e50; }
+
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 10px; font-weight: bold; color: #636e72; margin-bottom: 3px; text-transform: uppercase; }
+        input[type="month"] { padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; width: 160px; }
+
+        .btn-group { display: flex; gap: 8px; }
+        .action-btn { 
+            padding: 8px 16px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 12px; 
+            color: white; 
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-refresh { background: #3498db; }
+        .btn-excel { background: #27ae60; }
+        .btn-print { background: #e74c3c; }
+
+        /* Table Styling with Light Headers */
+        .table-wrapper { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; table-layout: auto; color: #000; }
+        
+        th { 
+            background: #f2f2f2; 
+            color: #000; 
+            padding: 6px 2px; 
+            border: 1px solid #aaa; 
+            text-align: center; 
+            white-space: normal; 
+            overflow-wrap: break-word; 
+            max-width: 75px; 
+        }
+        
+        .head-rc-prd { background: #e1bee7 !important; } /* Light Purple */
+        .head-rc-iss { background: #fff9c4 !important; } /* Light Yellow */
+        .head-rc-stk { background: #b2dfdb !important; } /* Light Teal */
+
+        td { padding: 6px 2px; border: 1px solid #ccc; text-align: center; }
+        tr:nth-child(even) { background-color: #fcfcfc; }
+        
+        .grand-total-row { background: #dfe6e9 !important; color: #000 !important; font-weight: bold; }
+        .grand-total-row td { border: 1.5px solid #000; }
+
+        .hidden { display: none !important; }
+
+        @media print {
+            @page { size: portrait; margin: 0.4cm; }
+            body { background: white; margin: 0; padding: 0; color: #000 !important; }
+            .container { box-shadow: none; border: none; width: 100%; max-width: 100%; margin: 0; padding: 0; }
+            .controls, .btn-group, .visibility-filters, .no-print, .btn-home-nav { display: none !important; }
+            
+            table { width: 100% !important; font-size: 9pt !important; border-collapse: collapse !important; }
+            th { color: #000 !important; font-weight: bold !important; border: 1pt solid #000 !important; -webkit-print-color-adjust: exact !important; }
+            td { color: #000 !important; font-weight: 600 !important; border: 1pt solid #000 !important; padding: 4px 2px !important; }
+        }
+    </style>
+</head>
+<body onload="initReport()">
+
+<div class="container">
+    <a href="index.html" class="btn-home-nav no-print">← Return Home</a>
+    
+    <div class="header-section">
+        <h1 class="company-name">NRV DENIM PRIVATE LIMITED</h1>
+        <p class="report-title">DAILY RECYCLE PLANT DATA REPORT</p>
+    </div>
+
+    <div class="controls no-print">
+        <div class="control-row">
+            <div class="form-group">
+                <label>Reporting Month</label>
+                <input type="month" id="reportMonth" onchange="loadReport()">
+            </div>
+            <div class="btn-group">
+                <button class="action-btn btn-refresh" onclick="loadReport()">↻ Refresh</button>
+                <button class="action-btn btn-excel" onclick="exportToExcel()">↓ Excel</button>
+                <button class="action-btn btn-print" onclick="window.print()">🖨 Print</button>
+            </div>
+        </div>
+
+        <div class="visibility-filters">
+            <b style="font-size: 13px; margin-right: 10px; color: #d63031;">Group Filters:</b>
+            <label class="filter-item">
+                <input type="checkbox" checked onchange="toggleGroup(this, ['grp-rc-prd', 'grp-rc-iss', 'grp-rc-stk'])"> Recycle Plant Data
+            </label>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="mainReportTable">
+            <thead>
+                <tr>
+                    <th rowspan="2">Date</th>
+                    <th colspan="2" class="grp-rc-prd head-rc-prd">Reciept Recycle Plant</th>
+                    <th colspan="2" class="grp-rc-iss head-rc-iss">Issue Recycle Fiber</th>
+                    <th colspan="2" class="grp-rc-stk head-rc-stk">Stock Recycled Fiber (Total)</th>
+                </tr>
+                <tr>
+                    <th class="grp-rc-prd head-rc-prd">Job Work Rec. (Fiber)</th>
+                    <th class="grp-rc-prd head-rc-prd">Recycled Fiber ( In House )</th>
+                    
+                    <th class="grp-rc-iss head-rc-iss">Job Work Issue (Fiber)</th>
+                    <th class="grp-rc-iss head-rc-iss">Issue Fiber ( In House )</th>
+                    
+                    <th class="grp-rc-stk head-rc-stk">Job Work Rec. (Fiber)</th>
+                    <th class="grp-rc-stk head-rc-stk">Recycled Fiber ( In House )</th>
+                </tr>
+            </thead>
+            <tbody id="reportDataBody"></tbody>
+            <tfoot id="reportFooter"></tfoot>
+        </table>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxTO3fc8hh7PBrLJI95YECv-H67eWbmzbyB7TDcgLRXGGg0ua-zzWVLMKKwe5jZS63iyw/exec';
+
+    function toggleGroup(checkbox, classNamesArray) {
+        classNamesArray.forEach(className => {
+            const cols = document.getElementsByClassName(className);
+            for(let col of cols) {
+                if (checkbox.checked) col.classList.remove('hidden');
+                else col.classList.add('hidden');
+            }
+        });
+    }
+
+    function initReport() {
+        const today = new Date().toISOString().slice(0, 7);
+        document.getElementById('reportMonth').value = today;
+        loadReport();
+    }
+
+    function formatDateToDMY(dateString) {
+        if(!dateString) return '';
+        const parts = dateString.split('-');
+        if(parts.length !== 3) return dateString;
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    async function loadReport() {
+        const tbody = document.getElementById('reportDataBody');
+        const tfoot = document.getElementById('reportFooter');
+        const selectedMonth = document.getElementById('reportMonth').value;
+        if(!selectedMonth) return;
+        
+        tbody.innerHTML = "<tr><td colspan='7'>Syncing with server...</td></tr>";
+
+        try {
+            const [respRec, respIss] = await Promise.all([
+                fetch(`${API_URL}?Department=RAW_MATERIAL_REC&t=${Date.now()}`),
+                fetch(`${API_URL}?Department=RAW_MATERIAL_ISSUE&t=${Date.now()}`)
+            ]);
+            
+            const rawRec = await respRec.json();
+            const rawIss = await respIss.json();
+
+            let dailyData = {};
+            const ensureDate = (d) => {
+                if(!dailyData[d]) dailyData[d] = { 
+                    mr_jw_fib:0, prd_fib:0, jw_iss_fib:0, iss_fib:0
+                };
+            };
+
+            // Process Receipts
+            rawRec.forEach(r => {
+                if(!r["Date"]) return;
+                const d = r["Date"].split('T')[0];
+                ensureDate(d);
+                const qty = parseFloat(r["Qty (KG)"] || 0);
+                const cat = (r["Category"] || "").trim().toUpperCase();
+                const item = (r["Item Description"] || "").trim().toUpperCase();
+                
+                if(cat === "JOB WORK" && item === "RECYCLED FIBER") dailyData[d].mr_jw_fib += qty;
+                else if(cat === "FIBER RECYCLING PLANT" && item === "RECYCLED FIBER") dailyData[d].prd_fib += qty;
+            });
+
+            // Process Issues
+            rawIss.forEach(i => {
+                if(!i["Date"]) return;
+                const d = i["Date"].split('T')[0];
+                ensureDate(d);
+                const qty = parseFloat(i["Qty (KG)"] || 0);
+                const cat = (i["Category"] || "").trim().toUpperCase();
+                const item = (i["Item Description"] || "").trim().toUpperCase();
+                
+                if(cat === "JOB WORK" && item === "RECYCLED FIBER") dailyData[d].jw_iss_fib += qty;
+                else if(cat === "FIBER RECYCLING PLANT" && item === "RECYCLED FIBER") dailyData[d].iss_fib += qty;
+            });
+
+            tbody.innerHTML = "";
+            let runJW = 0, runFib = 0;
+
+            let sum = { mrJW:0, pF:0, jwIF:0, iF:0 };
+            let hasPrintedOpening = false;
+            const allDates = Object.keys(dailyData).sort();
+            
+            allDates.forEach(date => {
+                const day = dailyData[date];
+
+                // Calculate stock running balance
+                runJW += (day.mr_jw_fib - day.jw_iss_fib);
+                runFib += (day.prd_fib - day.iss_fib);
+
+                if (date >= selectedMonth + "-01" && !hasPrintedOpening) {
+                    
+                    // The stock calculated right BEFORE the current row processes is essentially the opening stock.
+                    // Because we already added the current day's data to the running totals above, 
+                    // we subtract today's net flow to show the actual opening balance at the start of this month.
+                    let openJW = runJW - (day.mr_jw_fib - day.jw_iss_fib);
+                    let openFib = runFib - (day.prd_fib - day.iss_fib);
+
+                    tbody.innerHTML += `<tr style="background-color: #fff9c4; font-weight: bold; color: #000;">
+                        <td t="s">Opening</td>
+                        <td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td>
+                        <td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td>
+                        
+                        <td class="grp-rc-stk">${openJW.toFixed(0)}</td><td class="grp-rc-stk">${openFib.toFixed(0)}</td>
+                    </tr>`;
+                    hasPrintedOpening = true;
+                }
+
+                if(date.startsWith(selectedMonth)) {
+                    sum.mrJW += day.mr_jw_fib; 
+                    sum.pF += day.prd_fib; 
+                    sum.jwIF += day.jw_iss_fib; 
+                    sum.iF += day.iss_fib; 
+
+                    tbody.innerHTML += `<tr>
+                        <td t="s">${formatDateToDMY(date)}</td>
+                        
+                        <td class="grp-rc-prd">${day.mr_jw_fib.toFixed(0)}</td>
+                        <td class="grp-rc-prd">${day.prd_fib.toFixed(0)}</td>
+                        
+                        <td class="grp-rc-iss">${day.jw_iss_fib.toFixed(0)}</td>
+                        <td class="grp-rc-iss">${day.iss_fib.toFixed(0)}</td>
+                        
+                        <td class="grp-rc-stk">${runJW.toFixed(0)}</td>
+                        <td class="grp-rc-stk">${runFib.toFixed(0)}</td>
+                    </tr>`;
+                }
+            });
+            
+            if (!hasPrintedOpening) {
+                tbody.innerHTML += `<tr style="background-color: #fff9c4; font-weight: bold; color: #000;">
+                    <td t="s">Opening</td>
+                    <td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td>
+                    <td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td>
+                    <td class="grp-rc-stk">${runJW.toFixed(0)}</td><td class="grp-rc-stk">${runFib.toFixed(0)}</td>
+                </tr>`;
+            }
+
+            if(allDates.some(d => d.startsWith(selectedMonth))) {
+                tfoot.innerHTML = `<tr class="grand-total-row">
+                    <td t="s">TOTAL</td>
+                    
+                    <td class="grp-rc-prd">${sum.mrJW.toFixed(0)}</td>
+                    <td class="grp-rc-prd">${sum.pF.toFixed(0)}</td>
+                    
+                    <td class="grp-rc-iss">${sum.jwIF.toFixed(0)}</td>
+                    <td class="grp-rc-iss">${sum.iF.toFixed(0)}</td>
+                    
+                    <td colspan="2" style="background:#f2f2f2; text-align:center;">STOCK EXCLUDED FROM TOTAL</td>
+                </tr>`;
+            }
+        } catch(e) { tbody.innerHTML = "<tr><td colspan='7' style='color:red;'>Error loading data.</td></tr>"; }
+    }
+
+    function exportToExcel() {
+        XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById("mainReportTable")), `Daily_Summary_${document.getElementById('reportMonth').value}.xlsx`);
+    }
+</script>
+</body>
+</html>
