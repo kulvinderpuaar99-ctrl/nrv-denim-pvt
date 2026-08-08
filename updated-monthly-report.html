@@ -354,6 +354,15 @@
             let e = globalStockMap[k];
             let ck = e.opKg+e.reKg-e.isKg, cb = e.opBal+e.reBal-e.isBal, ca = e.opAmt+e.reAmt-e.isAmt;
             
+            // Check if all fields (Opening, Received, Issued, Closing) are completely zero/empty
+            let hasOpening = (Math.abs(e.opKg) > 0.0001 || Math.abs(e.opBal) > 0 || Math.abs(e.opAmt) > 0);
+            let hasReceived = (Math.abs(e.reKg) > 0.0001 || Math.abs(e.reBal) > 0 || Math.abs(e.reAmt) > 0);
+            let hasIssued = (Math.abs(e.isKg) > 0.0001 || Math.abs(e.isBal) > 0 || Math.abs(e.isAmt) > 0);
+            let hasClosing = (Math.abs(ck) > 0.0001 || Math.abs(cb) > 0 || Math.abs(ca) > 0);
+
+            // Hide if article has no Opening, Received, Issued, AND Closing
+            if(!hasOpening && !hasReceived && !hasIssued && !hasClosing) continue;
+
             if(hZ && ck <= 0) continue;
             
             // Apply text filter to limit rendering AND total calculations (ONLY Category and Item now)
@@ -494,6 +503,15 @@
             let e = globalStockMap[k];
             let ck = e.opKg+e.reKg-e.isKg, cb = e.opBal+e.reBal-e.isBal, ca = e.opAmt+e.reAmt-e.isAmt;
             
+            // Check if all fields (Opening, Received, Issued, Closing) are completely zero/empty
+            let hasOpening = (Math.abs(e.opKg) > 0.0001 || Math.abs(e.opBal) > 0 || Math.abs(e.opAmt) > 0);
+            let hasReceived = (Math.abs(e.reKg) > 0.0001 || Math.abs(e.reBal) > 0 || Math.abs(e.reAmt) > 0);
+            let hasIssued = (Math.abs(e.isKg) > 0.0001 || Math.abs(e.isBal) > 0 || Math.abs(e.isAmt) > 0);
+            let hasClosing = (Math.abs(ck) > 0.0001 || Math.abs(cb) > 0 || Math.abs(ca) > 0);
+
+            // Hide if article has no Opening, Received, Issued, AND Closing
+            if(!hasOpening && !hasReceived && !hasIssued && !hasClosing) continue;
+
             if(hZ && ck <= 0) continue;
             
             // Apply text filter to excel export (ONLY Category and Item now)
