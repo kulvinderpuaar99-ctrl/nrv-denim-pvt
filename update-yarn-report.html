@@ -391,6 +391,15 @@
             let e = globalStockMap[k];
             let ck = e.opKg+e.reKg-e.isKg, cb = e.opBal+e.reBal-e.isBal, cc = e.opCones+e.reCones-e.isCones, ca = e.opAmt+e.reAmt-e.isAmt;
             
+            // Check if all fields (Opening, Received, Issued, Closing) are completely zero/empty
+            let hasOpening = (Math.abs(e.opKg) > 0.0001 || Math.abs(e.opBal) > 0 || Math.abs(e.opCones) > 0 || Math.abs(e.opAmt) > 0);
+            let hasReceived = (Math.abs(e.reKg) > 0.0001 || Math.abs(e.reBal) > 0 || Math.abs(e.reCones) > 0 || Math.abs(e.reAmt) > 0);
+            let hasIssued = (Math.abs(e.isKg) > 0.0001 || Math.abs(e.isBal) > 0 || Math.abs(e.isCones) > 0 || Math.abs(e.isAmt) > 0);
+            let hasClosing = (Math.abs(ck) > 0.0001 || Math.abs(cb) > 0 || Math.abs(cc) > 0 || Math.abs(ca) > 0);
+
+            // Hide if article has no Opening, Received, Issued, AND Closing
+            if(!hasOpening && !hasReceived && !hasIssued && !hasClosing) continue;
+
             if(hZ && ck <= 0) continue;
             let searchString = (e.category + " " + e.item + " " + e.lotNo).toUpperCase();
             if (filterVal && !searchString.includes(filterVal)) continue;
@@ -522,6 +531,14 @@
             let e = globalStockMap[k];
             let ck = e.opKg+e.reKg-e.isKg, cb = e.opBal+e.reBal-e.isBal, cc = e.opCones+e.reCones-e.isCones, ca = e.opAmt+e.reAmt-e.isAmt;
             
+            // Check if all fields are completely zero
+            let hasOpening = (Math.abs(e.opKg) > 0.0001 || Math.abs(e.opBal) > 0 || Math.abs(e.opCones) > 0 || Math.abs(e.opAmt) > 0);
+            let hasReceived = (Math.abs(e.reKg) > 0.0001 || Math.abs(e.reBal) > 0 || Math.abs(e.reCones) > 0 || Math.abs(e.reAmt) > 0);
+            let hasIssued = (Math.abs(e.isKg) > 0.0001 || Math.abs(e.isBal) > 0 || Math.abs(e.isCones) > 0 || Math.abs(e.isAmt) > 0);
+            let hasClosing = (Math.abs(ck) > 0.0001 || Math.abs(cb) > 0 || Math.abs(cc) > 0 || Math.abs(ca) > 0);
+
+            if(!hasOpening && !hasReceived && !hasIssued && !hasClosing) continue;
+
             let deptTxt = Object.keys(e.deptIssues).length > 0 ? Object.entries(e.deptIssues).map(([d, v]) => `${d}: ${v.kg}KG (${v.cones}C)`).join(" | ") : "No Issues";
             
             data.push([e.category, e.item, e.lotNo, deptTxt, e.opKg, e.opBal, e.opCones, e.opAmt, e.reKg, e.reBal, e.reCones, e.reAmt, e.isKg, e.isBal, e.isCones, e.isAmt, ck, cb, cc, ca, ck > 0 ? "IN STOCK" : "NIL"]);
