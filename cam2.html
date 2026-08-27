@@ -24,7 +24,7 @@
       background-color: #f0f0f0;
       font-weight: bold;
     }
-    /* New Styles for History Table */
+    /* Styles for History Table */
     .history-section {
       margin-top: 30px;
       text-align: left;
@@ -78,7 +78,7 @@
   </div>
 
   <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwdJQv73TSXCWOIXoMHMSFYbJHnQDECgyT4yntGpog5XG-dY1DThBGeU89juzxVIRgDlA/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec";
     
     let isProcessing = false;
     let storedScans = JSON.parse(localStorage.getItem("qr_scan_history")) || [];
@@ -99,11 +99,19 @@
 
       const now = new Date();
       
+      // Force Date format to DD/MM/YYYY
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+      const year = now.getFullYear();
+      const dateStr = `${day}/${month}/${year}`;
+      
+      const timeStr = now.toLocaleTimeString();
+      
       // Create a unique record for local storage
       const scanRecord = {
         id: Date.now(),
-        date: now.toLocaleDateString(),
-        time: now.toLocaleTimeString(),
+        date: dateStr,
+        time: timeStr,
         parts: parts,
         synced: false
       };
@@ -192,7 +200,7 @@
           <td>${scan.parts[0] || ""} ...</td>
           <td class="${scan.synced ? 'status-saved' : 'status-pending'}">${scan.synced ? 'Saved' : 'Pending'}</td>
           <td>
-            ${!scan.synced ? `<button onclick="resendSingle(${scan.id})" style="margin-bottom:4px;">Resend</button><br>` : ''}
+            <button onclick="resendSingle(${scan.id})" style="margin-bottom:4px;">Resend</button><br>
             <button class="btn-delete" onclick="deleteSingle(${scan.id})">Delete</button>
           </td>
         </tr>`;
@@ -243,7 +251,7 @@
       }
     }
 
-    // Initialize scanner (Increased FPS from 10 to 30 for much faster scanning)
+    // Initialize scanner (FPS set to 30 for fast scanning)
     const html5QrcodeScanner = new Html5QrcodeScanner(
       "reader",
       { fps: 30, qrbox: { width: 250, height: 250 } },
