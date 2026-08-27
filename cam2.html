@@ -9,7 +9,7 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 480px;
+      max-width: 600px;
       margin: 20px auto;
       text-align: center;
       padding: 10px;
@@ -24,6 +24,42 @@
       background-color: #f0f0f0;
       font-weight: bold;
     }
+    /* New Styles for History Table */
+    .history-section {
+      margin-top: 30px;
+      text-align: left;
+    }
+    .history-controls {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 6px;
+      text-align: center;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    button {
+      padding: 5px 10px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 3px;
+    }
+    button:hover { background-color: #0056b3; }
+    .btn-delete { background-color: #dc3545; }
+    .btn-delete:hover { background-color: #c82333; }
+    .status-saved { color: green; font-weight: bold; }
+    .status-pending { color: red; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -32,10 +68,23 @@
   <div id="reader"></div>
   <div id="status">Initializing Camera...</div>
 
+  <div class="history-section">
+    <h3>Scan History</h3>
+    <div class="history-controls">
+      <button onclick="syncAllUnsaved()">Sync All Unsaved</button>
+      <button class="btn-delete" onclick="deleteAllHistory()">Delete All History</button>
+    </div>
+    <div id="history-table-container"></div>
+  </div>
+
   <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwdJQv73TSXCWOIXoMHMSFYbJHnQDECgyT4yntGpog5XG-dY1DThBGeU89juzxVIRgDlA/exec";
     
     let isProcessing = false;
+    let storedScans = JSON.parse(localStorage.getItem("qr_scan_history")) || [];
+
+    // Render the table immediately on load
+    window.onload = renderTable;
 
     function onScanSuccess(decodedText) {
       if (isProcessing) return;
@@ -43,52 +92,161 @@
 
       const statusEl = document.getElementById("status");
       statusEl.style.backgroundColor = "#fff3cd";
-      statusEl.innerText = "QR Detected! Sending data...";
+      statusEl.innerText = "QR Detected! Processing...";
 
-      // Split string by '#' and trim whitespace from each value
+      // Split string by '#' and trim whitespace
       const parts = decodedText.split("#").map(item => item.trim());
 
-      // Timestamp generation
       const now = new Date();
-      const dateStr = now.toLocaleDateString();
-      const timeStr = now.toLocaleTimeString();
-
-      const payload = {
-        date: dateStr,
-        time: timeStr,
-        parts: parts
+      
+      // Create a unique record for local storage
+      const scanRecord = {
+        id: Date.now(),
+        date: now.toLocaleDateString(),
+        time: now.toLocaleTimeString(),
+        parts: parts,
+        synced: false
       };
 
-      // Post payload to Google Apps Script
-      fetch(GOOGLE_SCRIPT_URL, {
+      // Save to local storage first
+      storedScans.push(scanRecord);
+      saveData();
+
+      // Attempt to send to Google Sheets
+      sendToGoogleSheets(scanRecord)
+        .then(() => {
+          statusEl.style.backgroundColor = "#d4edda";
+          statusEl.innerText = "Saved to Google Sheets!";
+          
+          setTimeout(() => {
+            isProcessing = false;
+            statusEl.style.backgroundColor = "#f0f0f0";
+            statusEl.innerText = "Ready for next scan...";
+          }, 2000);
+        })
+        .catch(() => {
+          statusEl.style.backgroundColor = "#f8d7da";
+          statusEl.innerText = "Offline/Failed. Saved locally to send later.";
+          
+          setTimeout(() => { 
+            isProcessing = false; 
+            statusEl.style.backgroundColor = "#f0f0f0";
+            statusEl.innerText = "Ready for next scan...";
+          }, 2500);
+        });
+    }
+
+    // Function to handle fetching to Google Apps Script
+    function sendToGoogleSheets(record) {
+      const payload = {
+        date: record.date,
+        time: record.time,
+        parts: record.parts
+      };
+
+      return fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify(payload)
-      })
-      .then(() => {
-        statusEl.style.backgroundColor = "#d4edda";
-        statusEl.innerText = `Saved successfully to 'scan' tab! (${parts.length} values saved)`;
-        
-        // Cooldown before scanning next QR code
-        setTimeout(() => {
-          isProcessing = false;
-          statusEl.style.backgroundColor = "#f0f0f0";
-          statusEl.innerText = "Ready for next scan...";
-        }, 2500);
-      })
-      .catch((err) => {
-        console.error(err);
-        statusEl.style.backgroundColor = "#f8d7da";
-        statusEl.innerText = "Failed to save data.";
-        setTimeout(() => { isProcessing = false; }, 2500);
+      }).then(() => {
+        // Mark as synced in local storage
+        const index = storedScans.findIndex(s => s.id === record.id);
+        if (index !== -1) {
+          storedScans[index].synced = true;
+          saveData();
+        }
       });
     }
 
-    // Initialize scanner
+    // --- Local Storage & UI Functions ---
+
+    function saveData() {
+      localStorage.setItem("qr_scan_history", JSON.stringify(storedScans));
+      renderTable();
+    }
+
+    function renderTable() {
+      const container = document.getElementById("history-table-container");
+      if (storedScans.length === 0) {
+        container.innerHTML = "<p>No scans recorded yet.</p>";
+        return;
+      }
+
+      let html = `<table>
+        <tr>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Data Preview</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>`;
+
+      // Show newest scans at the top
+      const reversedScans = [...storedScans].reverse();
+
+      reversedScans.forEach(scan => {
+        html += `<tr>
+          <td>${scan.date}</td>
+          <td>${scan.time}</td>
+          <td>${scan.parts[0] || ""} ...</td>
+          <td class="${scan.synced ? 'status-saved' : 'status-pending'}">${scan.synced ? 'Saved' : 'Pending'}</td>
+          <td>
+            ${!scan.synced ? `<button onclick="resendSingle(${scan.id})" style="margin-bottom:4px;">Resend</button><br>` : ''}
+            <button class="btn-delete" onclick="deleteSingle(${scan.id})">Delete</button>
+          </td>
+        </tr>`;
+      });
+
+      html += `</table>`;
+      container.innerHTML = html;
+    }
+
+    function resendSingle(id) {
+      const record = storedScans.find(s => s.id === id);
+      if (record) {
+        document.getElementById("status").innerText = "Resending data...";
+        sendToGoogleSheets(record).then(() => {
+          document.getElementById("status").innerText = "Ready for next scan...";
+        });
+      }
+    }
+
+    function syncAllUnsaved() {
+      const unsaved = storedScans.filter(s => !s.synced);
+      if (unsaved.length === 0) {
+        alert("All data is already synced!");
+        return;
+      }
+      
+      document.getElementById("status").innerText = `Syncing ${unsaved.length} items...`;
+      
+      let promises = unsaved.map(record => sendToGoogleSheets(record));
+      
+      Promise.all(promises).then(() => {
+        document.getElementById("status").innerText = "All pending data synced!";
+        setTimeout(() => { document.getElementById("status").innerText = "Ready for next scan..."; }, 2000);
+      });
+    }
+
+    function deleteSingle(id) {
+      if (confirm("Delete this scan?")) {
+        storedScans = storedScans.filter(s => s.id !== id);
+        saveData();
+      }
+    }
+
+    function deleteAllHistory() {
+      if (confirm("Are you sure you want to delete ALL stored scan history?")) {
+        storedScans = [];
+        saveData();
+      }
+    }
+
+    // Initialize scanner (Increased FPS from 10 to 30 for much faster scanning)
     const html5QrcodeScanner = new Html5QrcodeScanner(
       "reader",
-      { fps: 10, qrbox: { width: 220, height: 220 } },
+      { fps: 30, qrbox: { width: 250, height: 250 } },
       /* verbose= */ false
     );
 
