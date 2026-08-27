@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Scanner to Google Sheets</title>
+  <!-- HTML5 QR Code Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 480px;
+      margin: 20px auto;
+      text-align: center;
+      padding: 10px;
+    }
+    #reader {
+      width: 100%;
+    }
+    #status {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 5px;
+      background-color: #f0f0f0;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>QR Code Collector</h2>
+  <div id="reader"></div>
+  <div id="status">Initializing Camera...</div>
+
+  <script>
+    // Paste your deployed Google Apps Script URL here
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwdJQv73TSXCWOIXoMHMSFYbJHnQDECgyT4yntGpog5XG-dY1DThBGeU89juzxVIRgDlA/exec";
+    
+    let isProcessing = false;
+
+    function onScanSuccess(decodedText) {
+      if (isProcessing) return;
+      isProcessing = true;
+
+      const statusEl = document.getElementById("status");
+      statusEl.style.backgroundColor = "#fff3cd";
+      statusEl.innerText = "QR Detected! Sending data...";
+
+      // Split string by '#'
+      const parts = decodedText.split("#");
+
+      // Timestamp generation
+      const now = new Date();
+      const dateStr = now.toLocaleDateString();
+      const timeStr = now.toLocaleTimeString();
+
+      const payload = {
+        date: dateStr,
+        time: timeStr,
+        raw: decodedText,
+        parts: parts
+      };
+
+      // Post payload to Google Apps Script
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(payload)
+      })
+      .then(() => {
+        statusEl.style.backgroundColor = "#d4edda";
+        statusEl.innerText = `Saved successfully! (Found ${parts.length} part(s))`;
+        
+        // Cooldown before scanning next QR code
+        setTimeout(() => {
+          isProcessing = false;
+          statusEl.style.backgroundColor = "#f0f0f0";
+          statusEl.innerText = "Ready for next scan...";
+        }, 2500);
+      })
+      .catch((err) => {
+        console.error(err);
+        statusEl.style.backgroundColor = "#f8d7da";
+        statusEl.innerText = "Failed to save data.";
+        setTimeout(() => { isProcessing = false; }, 2500);
+      });
+    }
+
+    // Initialize scanner
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader",
+      { fps: 10, qrbox: { width: 220, height: 220 } },
+      /* verbose= */ false
+    );
+
+    html5QrcodeScanner.render(onScanSuccess);
+  </script>
+</body>
+</html>
