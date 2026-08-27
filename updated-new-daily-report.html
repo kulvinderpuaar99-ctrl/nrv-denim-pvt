@@ -346,7 +346,7 @@
                     // Calculate WIP using ONLY Market Purchase and Fiber Plant Waste
                     let prevIssueForRecycle = prev_mi_mkt + prev_mi_plt_fiber;
                     let openRecPercent = prevIssueForRecycle > 0 ? (((prev_prd_fib + prev_prd_gut + prev_prd_kb + prev_prd_md) / prevIssueForRecycle) * 100) : 0;
-                    openWip = prevIssueForRecycle > 0 ? (prevIssueForRecycle * (100 - (openRecPercent + 2.5)) / 100) : 0;
+                    openWip = prevIssueForRecycle > 0 ? (prevIssueForRecycle * (100 - (openRecPercent + 2.0)) / 100) : 0;
 
                     tbody.innerHTML += `<tr style="background-color: #fff9c4; font-weight: bold; color: #000;">
                         <td t="s">Opening</td>
@@ -383,7 +383,7 @@
                     
                     // Yield and WIP uses ONLY Mkt Purchase and Plant Waste (FRP)
                     let recPercent = issueTotalForRecycle > 0 ? (((day.prd_fib + day.prd_gut + day.prd_kb + day.prd_md) / issueTotalForRecycle) * 100) : 0;
-                    let wip = issueTotalForRecycle > 0 ? (issueTotalForRecycle * (100 - (recPercent + 2.5)) / 100) : 0;
+                    let wip = issueTotalForRecycle > 0 ? (issueTotalForRecycle * (100 - (recPercent + 2.0)) / 100) : 0;
 
                     tbody.innerHTML += `<tr>
                         <td t="s">${formatDateToDMY(date)}</td>
@@ -404,7 +404,7 @@
             if (!hasPrintedOpening) {
                 let prevIssueForRecycle = prev_mi_mkt + prev_mi_plt_fiber;
                 let openRecPercent = prevIssueForRecycle > 0 ? (((prev_prd_fib + prev_prd_gut + prev_prd_kb + prev_prd_md) / prevIssueForRecycle) * 100) : 0;
-                openWip = prevIssueForRecycle > 0 ? (prevIssueForRecycle * (100 - (openRecPercent + 2.5)) / 100) : 0;
+                openWip = prevIssueForRecycle > 0 ? (prevIssueForRecycle * (100 - (openRecPercent + 2.0)) / 100) : 0;
 
                 tbody.innerHTML += `<tr style="background-color: #fff9c4; font-weight: bold; color: #000;">
                     <td t="s">Opening</td>
@@ -424,7 +424,7 @@
                 let sumIssueForRecycle = sum.miM + sum.miPF;
                 
                 let sumRecPercent = sumIssueForRecycle > 0 ? (((sum.pF + sum.pG + sum.pKB + sum.pMD) / sumIssueForRecycle) * 100) : 0;
-                let sumWip = sumIssueForRecycle > 0 ? (sumIssueForRecycle * (100 - (sumRecPercent + 2.5)) / 100) : 0;
+                let sumWip = sumIssueForRecycle > 0 ? (sumIssueForRecycle * (100 - (sumRecPercent + 2.0)) / 100) : 0;
                 
                 let finalTotalWip = sumWip + openWip;
 
