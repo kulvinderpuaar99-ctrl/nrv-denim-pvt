@@ -9,14 +9,34 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: 20px auto;
+      margin: 0;
+      padding: 0; 
       text-align: center;
-      padding: 10px;
     }
+    
+    /* Camera Container full width */
     #reader {
       width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
     }
+    /* Force camera video to fit container */
+    #reader video {
+      width: 100% !important;
+      height: auto !important;
+      object-fit: cover;
+    }
+
+    /* Restrict other elements so text/buttons remain readable */
+    h2, #status, .history-section {
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      padding-left: 15px;
+      padding-right: 15px;
+      box-sizing: border-box;
+    }
+
     #status {
       margin-top: 15px;
       padding: 10px;
@@ -24,6 +44,7 @@
       background-color: #f0f0f0;
       font-weight: bold;
     }
+    
     /* Styles for History Table */
     .history-section {
       margin-top: 30px;
@@ -32,6 +53,8 @@
     .history-controls {
       display: flex;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
       margin-bottom: 10px;
     }
     table {
@@ -60,18 +83,98 @@
     .btn-delete:hover { background-color: #c82333; }
     .status-saved { color: green; font-weight: bold; }
     .status-pending { color: red; font-weight: bold; }
+
+    /* --- Paywall Overlay Styles --- */
+    #paywall-overlay {
+      display: none; 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(0,0,0,0.95); 
+      z-index: 9999; 
+      flex-direction: column; 
+      justify-content: center; 
+      align-items: center; 
+      text-align: center;
+    }
+    .paywall-modal {
+      background: white; 
+      color: black; 
+      padding: 40px 30px; 
+      border-radius: 8px; 
+      max-width: 400px; 
+      width: 90%;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .paywall-modal h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    .paywall-modal input {
+      padding: 10px; 
+      width: 80%; 
+      margin: 15px 0; 
+      border: 1px solid #ccc; 
+      border-radius: 4px;
+      font-size: 16px;
+      text-align: center;
+    }
+    .paywall-modal button {
+      padding: 12px 24px; 
+      font-size: 16px;
+      margin: 5px;
+    }
+    .btn-unlock {
+      background-color: #28a745;
+    }
+    .btn-unlock:hover {
+      background-color: #218838;
+    }
+    .btn-buy {
+      background-color: #007bff;
+    }
+    .btn-buy:hover {
+      background-color: #0056b3;
+    }
   </style>
 </head>
 <body>
 
+  <!-- Paywall Overlay -->
+  <div id="paywall-overlay">
+    <div class="paywall-modal">
+      <h2>Subscription Required</h2>
+      <p>Please enter your premium license key to unlock the QR scanner.</p>
+      
+      <input type="text" id="licenseKey" placeholder="Enter key (e.g., PREMIUM-2026)">
+      <br>
+      
+      <button class="btn-unlock" onclick="checkLicense()">Unlock Scanner</button>
+      
+      <br><br>
+      <p style="font-size: 14px; color: #555;">Don't have a key?</p>
+      <!-- Replace the href link below with your Gumroad, Stripe, or WhatsApp link -->
+      <a href="https://wa.me/919478911141?text=Hi,%20I%20want%20to%20buy%20the%20QR%20Scanner" target="_blank" style="text-decoration: none;">
+  <button class="btn-buy">Buy Subscription / Get Key</button>
+</a>
+
+      <p id="paywall-error" style="color: red; display: none; margin-top: 15px;">Invalid key. Please check your subscription.</p>
+    </div>
+  </div>
+
   <h2>QR Code Collector</h2>
+  
   <div id="reader"></div>
+  
   <div id="status">Initializing Camera...</div>
 
   <div class="history-section">
     <h3>Scan History</h3>
     <div class="history-controls">
       <button onclick="syncAllUnsaved()">Sync All Unsaved</button>
+      <button onclick="resendAll()">Resend All</button>
       <button class="btn-delete" onclick="deleteAllHistory()">Delete All History</button>
     </div>
     <div id="history-table-container"></div>
@@ -83,16 +186,40 @@
     let isProcessing = false;
     let storedScans = JSON.parse(localStorage.getItem("qr_scan_history")) || [];
 
-    // Render the table immediately on load
-    window.onload = renderTable;
+    // --- Subscription Check Logic ---
+    window.onload = function() {
+      if (localStorage.getItem("is_subscribed") !== "true") {
+        document.getElementById("paywall-overlay").style.display = "flex";
+      } else {
+        renderTable();
+      }
+    };
+
+    function checkLicense() {
+      const key = document.getElementById("licenseKey").value.trim();
+      // Change this to whatever key you want to distribute to paid users
+      if (key === "PREMIUM-20261") {
+        localStorage.setItem("is_subscribed", "true");
+        document.getElementById("paywall-overlay").style.display = "none";
+        renderTable();
+      } else {
+        document.getElementById("paywall-error").style.display = "block";
+      }
+    }
+    // --------------------------------
 
     function onScanSuccess(decodedText) {
       if (isProcessing) return;
       isProcessing = true;
 
+      // Unblock camera after 1 second so next QR code can be scanned immediately
+      setTimeout(() => {
+        isProcessing = false;
+      }, 1000);
+
       const statusEl = document.getElementById("status");
       statusEl.style.backgroundColor = "#fff3cd";
-      statusEl.innerText = "QR Detected! Processing...";
+      statusEl.innerText = "QR Scanned! Sending in background...";
 
       // Split string by '#' and trim whitespace
       const parts = decodedText.split("#").map(item => item.trim());
@@ -101,52 +228,46 @@
       
       // Force Date format to DD/MM/YYYY
       const day = String(now.getDate()).padStart(2, '0');
-      const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+      const month = String(now.getMonth() + 1).padStart(2, '0');
       const year = now.getFullYear();
       const dateStr = `${day}/${month}/${year}`;
       
       const timeStr = now.toLocaleTimeString();
+
+      // Calculate the count for the current date
+      const todayScansCount = storedScans.filter(scan => scan.date === dateStr).length;
+      const currentCount = todayScansCount + 1;
       
       // Create a unique record for local storage
       const scanRecord = {
         id: Date.now(),
+        count: currentCount,
         date: dateStr,
         time: timeStr,
         parts: parts,
         synced: false
       };
 
-      // Save to local storage first
+      // Save to local storage first and update table immediately
       storedScans.push(scanRecord);
       saveData();
 
-      // Attempt to send to Google Sheets
+      // Send to Google Sheets asynchronously in the background (NON-BLOCKING)
       sendToGoogleSheets(scanRecord)
         .then(() => {
           statusEl.style.backgroundColor = "#d4edda";
-          statusEl.innerText = "Saved to Google Sheets!";
-          
-          setTimeout(() => {
-            isProcessing = false;
-            statusEl.style.backgroundColor = "#f0f0f0";
-            statusEl.innerText = "Ready for next scan...";
-          }, 2000);
+          statusEl.innerText = `Scan #${currentCount} saved to Google Sheets!`;
         })
         .catch(() => {
           statusEl.style.backgroundColor = "#f8d7da";
-          statusEl.innerText = "Offline/Failed. Saved locally to send later.";
-          
-          setTimeout(() => { 
-            isProcessing = false; 
-            statusEl.style.backgroundColor = "#f0f0f0";
-            statusEl.innerText = "Ready for next scan...";
-          }, 2500);
+          statusEl.innerText = "Saved locally (Offline/Pending).";
         });
     }
 
     // Function to handle fetching to Google Apps Script
     function sendToGoogleSheets(record) {
       const payload = {
+        count: record.count,
         date: record.date,
         time: record.time,
         parts: record.parts
@@ -183,9 +304,11 @@
 
       let html = `<table>
         <tr>
+          <th># Count</th>
           <th>Date</th>
           <th>Time</th>
-          <th>Data Preview</th>
+          <th>Lot No.</th>
+          <th>Reff. No.</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>`;
@@ -194,10 +317,16 @@
       const reversedScans = [...storedScans].reverse();
 
       reversedScans.forEach(scan => {
+        // parts[2] = Column C (Lot No.), parts[3] = Column D (Reff. No.)
+        const lotNo = (scan.parts && scan.parts[2] !== undefined) ? scan.parts[2] : "";
+        const reffNo = (scan.parts && scan.parts[3] !== undefined) ? scan.parts[3] : "";
+
         html += `<tr>
+          <td><strong>${scan.count || 1}</strong></td>
           <td>${scan.date}</td>
           <td>${scan.time}</td>
-          <td>${scan.parts[0] || ""} ...</td>
+          <td>${lotNo}</td>
+          <td>${reffNo}</td>
           <td class="${scan.synced ? 'status-saved' : 'status-pending'}">${scan.synced ? 'Saved' : 'Pending'}</td>
           <td>
             <button onclick="resendSingle(${scan.id})" style="margin-bottom:4px;">Resend</button><br>
@@ -215,7 +344,7 @@
       if (record) {
         document.getElementById("status").innerText = "Resending data...";
         sendToGoogleSheets(record).then(() => {
-          document.getElementById("status").innerText = "Ready for next scan...";
+          document.getElementById("status").innerText = "Data resent!";
         });
       }
     }
@@ -233,8 +362,24 @@
       
       Promise.all(promises).then(() => {
         document.getElementById("status").innerText = "All pending data synced!";
-        setTimeout(() => { document.getElementById("status").innerText = "Ready for next scan..."; }, 2000);
       });
+    }
+
+    function resendAll() {
+      if (storedScans.length === 0) {
+        alert("No data to resend!");
+        return;
+      }
+      
+      if (confirm(`Are you sure you want to resend all ${storedScans.length} scans to Google Sheets? This may create duplicates if they were already saved.`)) {
+        document.getElementById("status").innerText = `Resending all ${storedScans.length} items...`;
+        
+        let promises = storedScans.map(record => sendToGoogleSheets(record));
+        
+        Promise.all(promises).then(() => {
+          document.getElementById("status").innerText = "All data resent successfully!";
+        });
+      }
     }
 
     function deleteSingle(id) {
@@ -251,10 +396,13 @@
       }
     }
 
-    // Initialize scanner (FPS set to 30 for fast scanning)
+    // Dynamically calculate scanning box size
+    let boxSize = Math.min(window.innerWidth * 0.7, 300);
+
+    // Initialize scanner (FPS set to 30 for continuous fast scanning)
     const html5QrcodeScanner = new Html5QrcodeScanner(
       "reader",
-      { fps: 30, qrbox: { width: 250, height: 250 } },
+      { fps: 30, qrbox: { width: boxSize, height: boxSize } },
       /* verbose= */ false
     );
 
