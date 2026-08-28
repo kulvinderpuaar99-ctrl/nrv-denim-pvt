@@ -148,16 +148,17 @@
       <h2>Subscription Required</h2>
       <p>Please enter your premium license key to unlock the QR scanner.</p>
       
-      <input type="text" id="licenseKey" placeholder="Enter key (e.g., Kulvinder Singh)">
+      <input type="text" id="licenseKey" placeholder="Enter key (e.g., PREMIUM-2026)">
       <br>
       
       <button class="btn-unlock" onclick="checkLicense()">Unlock Scanner</button>
       
       <br><br>
       <p style="font-size: 14px; color: #555;">Don't have a key?</p>
+      <!-- Replace the href link below with your Gumroad, Stripe, or WhatsApp link -->
       <a href="https://wa.me/919478911141?text=Hi,%20I%20want%20to%20buy%20the%20QR%20Scanner" target="_blank" style="text-decoration: none;">
-        <button class="btn-buy">Buy Subscription / Get Key</button>
-      </a>
+  <button class="btn-buy">Buy Subscription / Get Key</button>
+</a>
 
       <p id="paywall-error" style="color: red; display: none; margin-top: 15px;">Invalid key. Please check your subscription.</p>
     </div>
@@ -196,10 +197,8 @@
 
     function checkLicense() {
       const key = document.getElementById("licenseKey").value.trim();
-      
-      // The key is safely encoded in Base64 so casual users cannot find it by inspecting the code.
-      /
-      if (btoa(key) === "UFJFTUlVTS0yMDI2") {
+      // Change this to whatever key you want to distribute to paid users
+      if (key === "PREMIUM-20261") {
         localStorage.setItem("is_subscribed", "true");
         document.getElementById("paywall-overlay").style.display = "none";
         renderTable();
@@ -213,6 +212,7 @@
       if (isProcessing) return;
       isProcessing = true;
 
+      // Unblock camera after 1 second so next QR code can be scanned immediately
       setTimeout(() => {
         isProcessing = false;
       }, 1000);
@@ -221,10 +221,12 @@
       statusEl.style.backgroundColor = "#fff3cd";
       statusEl.innerText = "QR Scanned! Sending in background...";
 
+      // Split string by '#' and trim whitespace
       const parts = decodedText.split("#").map(item => item.trim());
 
       const now = new Date();
       
+      // Force Date format to DD/MM/YYYY
       const day = String(now.getDate()).padStart(2, '0');
       const month = String(now.getMonth() + 1).padStart(2, '0');
       const year = now.getFullYear();
@@ -232,9 +234,11 @@
       
       const timeStr = now.toLocaleTimeString();
 
+      // Calculate the count for the current date
       const todayScansCount = storedScans.filter(scan => scan.date === dateStr).length;
       const currentCount = todayScansCount + 1;
       
+      // Create a unique record for local storage
       const scanRecord = {
         id: Date.now(),
         count: currentCount,
@@ -244,9 +248,11 @@
         synced: false
       };
 
+      // Save to local storage first and update table immediately
       storedScans.push(scanRecord);
       saveData();
 
+      // Send to Google Sheets asynchronously in the background (NON-BLOCKING)
       sendToGoogleSheets(scanRecord)
         .then(() => {
           statusEl.style.backgroundColor = "#d4edda";
@@ -258,6 +264,7 @@
         });
     }
 
+    // Function to handle fetching to Google Apps Script
     function sendToGoogleSheets(record) {
       const payload = {
         count: record.count,
@@ -272,6 +279,7 @@
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify(payload)
       }).then(() => {
+        // Mark as synced in local storage
         const index = storedScans.findIndex(s => s.id === record.id);
         if (index !== -1) {
           storedScans[index].synced = true;
@@ -279,6 +287,8 @@
         }
       });
     }
+
+    // --- Local Storage & UI Functions ---
 
     function saveData() {
       localStorage.setItem("qr_scan_history", JSON.stringify(storedScans));
@@ -303,9 +313,11 @@
           <th>Actions</th>
         </tr>`;
 
+      // Show newest scans at the top
       const reversedScans = [...storedScans].reverse();
 
       reversedScans.forEach(scan => {
+        // parts[2] = Column C (Lot No.), parts[3] = Column D (Reff. No.)
         const lotNo = (scan.parts && scan.parts[2] !== undefined) ? scan.parts[2] : "";
         const reffNo = (scan.parts && scan.parts[3] !== undefined) ? scan.parts[3] : "";
 
@@ -384,8 +396,10 @@
       }
     }
 
+    // Dynamically calculate scanning box size
     let boxSize = Math.min(window.innerWidth * 0.7, 300);
 
+    // Initialize scanner (FPS set to 30 for continuous fast scanning)
     const html5QrcodeScanner = new Html5QrcodeScanner(
       "reader",
       { fps: 30, qrbox: { width: boxSize, height: boxSize } },
