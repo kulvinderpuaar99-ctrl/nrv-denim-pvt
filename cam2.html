@@ -148,7 +148,7 @@
       <h2>Subscription Required</h2>
       <p>Please enter your premium license key to unlock the QR scanner.</p>
       
-      <input type="text" id="licenseKey" placeholder="Enter key (e.g., PREMIUM-2026)">
+      <input type="text" id="licenseKey" placeholder="Enter key (e.g., Kulvinder Singh)">
       <br>
       
       <button class="btn-unlock" onclick="checkLicense()">Unlock Scanner</button>
@@ -198,7 +198,7 @@
       const key = document.getElementById("licenseKey").value.trim();
       
       // The key is safely encoded in Base64 so casual users cannot find it by inspecting the code.
-      // btoa("PREMIUM-2026") evaluates to "UFJFTUlVTS0yMDI2"
+      /
       if (btoa(key) === "UFJFTUlVTS0yMDI2") {
         localStorage.setItem("is_subscribed", "true");
         document.getElementById("paywall-overlay").style.display = "none";
