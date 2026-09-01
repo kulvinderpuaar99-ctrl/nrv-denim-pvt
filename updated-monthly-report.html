@@ -101,9 +101,12 @@
         .val-bal { color: #718096; font-size: 11px; display: block; }
         .val-amt { color: var(--secondary); font-weight: bold; font-size: 11px; display: block; margin-top: 2px; }
 
-        /* --- NEW MODAL STYLES --- */
+        /* --- MODAL STYLES --- */
         .clickable-dept { cursor: pointer; transition: background 0.2s, box-shadow 0.2s; }
         .clickable-dept:hover { background: #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        .clickable-rec { cursor: pointer; transition: background 0.2s, box-shadow 0.2s; border-radius: 4px; padding: 8px; display: block; }
+        .clickable-rec:hover { background: #c6f6d5; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(3px); }
         .modal-content { background-color: #ffffff; margin: 5% auto; padding: 25px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 50%; max-width: 600px; animation: modalFadeIn 0.3s; }
@@ -213,7 +216,7 @@
         <table class="modal-table">
             <thead>
                 <tr>
-                    <th>Issue Date</th>
+                    <th id="modalDateHeader">Date</th>
                     <th style="text-align: right;">Quantity (KG)</th>
                     <th style="text-align: right;">Bales</th>
                 </tr>
@@ -289,7 +292,7 @@
                     if(!globalStockMap[k]) {
                         globalStockMap[k] = { 
                             category: (item["Category"]||""), item: (item["Item Description"]||""), 
-                            deptIssues: {}, opKg: 0, opBal: 0, opAmt: 0, reKg: 0, reBal: 0, reAmt: 0, isKg: 0, isBal: 0, isAmt: 0 
+                            deptIssues: {}, recDates: {}, opKg: 0, opBal: 0, opAmt: 0, reKg: 0, reBal: 0, reAmt: 0, isKg: 0, isBal: 0, isAmt: 0 
                         };
                     }
                     
@@ -316,7 +319,7 @@
                         globalStockMap[k].deptIssues[dpt].kg += q;
                         globalStockMap[k].deptIssues[dpt].bal += b;
 
-                        // --- NEW: Track date-wise breakdown ---
+                        // Track date-wise breakdown
                         if(!globalStockMap[k].deptIssues[dpt].dates[itemDateStr]) {
                             globalStockMap[k].deptIssues[dpt].dates[itemDateStr] = { kg: 0, bal: 0 };
                         }
@@ -329,8 +332,19 @@
                         globalStockMap[k].opBal += (type==='r'?b:-b); 
                         globalStockMap[k].opAmt += (type==='r'?a:-a); 
                     } else if(isCurrentPeriod) { 
-                        if(type==='r'){ globalStockMap[k].reKg+=q; globalStockMap[k].reBal+=b; globalStockMap[k].reAmt+=a; } 
-                        else { globalStockMap[k].isKg+=q; globalStockMap[k].isBal+=b; globalStockMap[k].isAmt+=a; } 
+                        if(type==='r'){ 
+                            globalStockMap[k].reKg+=q; globalStockMap[k].reBal+=b; globalStockMap[k].reAmt+=a; 
+                            
+                            // Track date-wise received breakdown
+                            if(!globalStockMap[k].recDates[itemDateStr]) {
+                                globalStockMap[k].recDates[itemDateStr] = { kg: 0, bal: 0 };
+                            }
+                            globalStockMap[k].recDates[itemDateStr].kg += q;
+                            globalStockMap[k].recDates[itemDateStr].bal += b;
+                        } 
+                        else { 
+                            globalStockMap[k].isKg+=q; globalStockMap[k].isBal+=b; globalStockMap[k].isAmt+=a; 
+                        } 
                     }
                 });
             };
@@ -365,7 +379,7 @@
 
             if(hZ && ck <= 0) continue;
             
-            // Apply text filter to limit rendering AND total calculations (ONLY Category and Item now)
+            // Apply text filter to limit rendering AND total calculations
             let searchString = (e.category + " " + e.item).toUpperCase();
             if (filterVal && !searchString.includes(filterVal)) continue;
 
@@ -383,7 +397,6 @@
             let deptHtml = "";
             if(Object.keys(e.deptIssues).length > 0) {
                 for(let d in e.deptIssues) {
-                    // --- NEW: Encode data to pass to the modal onclick handler ---
                     const safeDatesData = encodeURIComponent(JSON.stringify(e.deptIssues[d].dates));
                     const safeDeptName = encodeURIComponent(d);
                     const safeItemName = encodeURIComponent(e.item);
@@ -396,13 +409,24 @@
                 }
             } else { deptHtml = `<span style="color:#cbd5e0; font-style:italic">No issues</span>`; }
 
+            // Received HTML format (Make clickable if > 0)
+            let receivedHtml = format(e.reKg, e.reBal, e.reAmt, "+ ");
+            if (e.reKg > 0 || e.reBal > 0) {
+                const safeDatesData = encodeURIComponent(JSON.stringify(e.recDates));
+                const safeItemName = encodeURIComponent(e.item);
+                receivedHtml = `<div class="clickable-rec" onclick="openReceivedDateModal('${safeItemName}', '${safeDatesData}')" title="Click for Date Breakdown">
+                    ${receivedHtml}
+                    <i class="fa fa-hand-pointer" style="color: #48bb78; font-size: 10px; margin-top: 4px; display: block;"></i>
+                </div>`;
+            }
+
             tbody.innerHTML += `
                 <tr>
                     <td style="font-weight:bold; color:var(--primary)">${e.category}</td>
                     <td>${e.item}</td>
                     <td style="display: ${sD ? '' : 'none'}">${deptHtml}</td>
                     <td>${format(e.opKg, e.opBal, e.opAmt)}</td>
-                    <td style="background: #f0fff4;">${format(e.reKg, e.reBal, e.reAmt, "+ ")}</td>
+                    <td style="background: #f0fff4;">${receivedHtml}</td>
                     <td style="background: #fff5f5;">${format(e.isKg, e.isBal, e.isAmt, "- ")}</td>
                     <td style="font-weight:bold;">${format(ck, cb, ca)}</td>
                     <td><span class="${ck>0?'status-ok':'status-nil'}">${ck>0?'IN STOCK':'NIL'}</span></td>
@@ -427,7 +451,7 @@
             </tr>`;
     }
 
-    // --- NEW: MODAL FUNCTIONS ---
+    // --- MODAL FUNCTIONS ---
     function openDateModal(encodedDept, encodedItem, encodedDates) {
         const dept = decodeURIComponent(encodedDept);
         const item = decodeURIComponent(encodedItem);
@@ -435,7 +459,25 @@
 
         document.getElementById('modalTitle').innerText = dept + " Issues";
         document.getElementById('modalSubtitle').innerText = "Item: " + item;
+        document.getElementById('modalDateHeader').innerText = "Issue Date";
         
+        populateModalTable(datesObj);
+        document.getElementById('dateWiseModal').style.display = 'block';
+    }
+
+    function openReceivedDateModal(encodedItem, encodedDates) {
+        const item = decodeURIComponent(encodedItem);
+        const datesObj = JSON.parse(decodeURIComponent(encodedDates));
+
+        document.getElementById('modalTitle').innerText = "Received Quantities";
+        document.getElementById('modalSubtitle').innerText = "Item: " + item;
+        document.getElementById('modalDateHeader').innerText = "Received Date";
+        
+        populateModalTable(datesObj);
+        document.getElementById('dateWiseModal').style.display = 'block';
+    }
+
+    function populateModalTable(datesObj) {
         const tbody = document.getElementById('modalTableBody');
         tbody.innerHTML = '';
         
@@ -451,7 +493,6 @@
                 totalKg += data.kg;
                 totalBal += data.bal;
                 
-                // Format the YYYY-MM-DD string nicely
                 const dateObj = new Date(dateStr);
                 const displayDate = dateObj.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
 
@@ -468,8 +509,6 @@
                 <td style="text-align: right; font-weight: bold; color: var(--primary);">${totalBal} Bls</td>
             </tr>`;
         }
-        
-        document.getElementById('dateWiseModal').style.display = 'block';
     }
 
     function closeModal() {
@@ -503,18 +542,15 @@
             let e = globalStockMap[k];
             let ck = e.opKg+e.reKg-e.isKg, cb = e.opBal+e.reBal-e.isBal, ca = e.opAmt+e.reAmt-e.isAmt;
             
-            // Check if all fields (Opening, Received, Issued, Closing) are completely zero/empty
             let hasOpening = (Math.abs(e.opKg) > 0.0001 || Math.abs(e.opBal) > 0 || Math.abs(e.opAmt) > 0);
             let hasReceived = (Math.abs(e.reKg) > 0.0001 || Math.abs(e.reBal) > 0 || Math.abs(e.reAmt) > 0);
             let hasIssued = (Math.abs(e.isKg) > 0.0001 || Math.abs(e.isBal) > 0 || Math.abs(e.isAmt) > 0);
             let hasClosing = (Math.abs(ck) > 0.0001 || Math.abs(cb) > 0 || Math.abs(ca) > 0);
 
-            // Hide if article has no Opening, Received, Issued, AND Closing
             if(!hasOpening && !hasReceived && !hasIssued && !hasClosing) continue;
 
             if(hZ && ck <= 0) continue;
             
-            // Apply text filter to excel export (ONLY Category and Item now)
             let searchString = (e.category + " " + e.item).toUpperCase();
             if (filterVal && !searchString.includes(filterVal)) continue;
 
@@ -536,17 +572,14 @@
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Stock Report");
         
-        // Professional Formatting for Excel Columns
         ws['!cols'] = [{wch:15}, {wch:30}, {wch:35}, {wch:12}, {wch:12}, {wch:15}, {wch:12}, {wch:12}, {wch:15}, {wch:12}, {wch:12}, {wch:15}, {wch:12}, {wch:12}, {wch:15}, {wch:10}];
         
-        // Dynamic file naming based on period type
         const pType = document.getElementById('periodType').value;
         const dStr = pType === 'month' ? document.getElementById('reportMonth').value : document.getElementById('reportDate').value;
         XLSX.writeFile(wb, `NRV_Stock_Report_${dStr}.xlsx`);
     }
 
     function filterStockTable() { 
-        // Triggering full re-render so totals recalculate based on the filter automatically
         renderTable(); 
     }
 </script>
