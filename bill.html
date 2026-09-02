@@ -34,11 +34,11 @@
             border: 1px solid #e9ecef;
         }
         
-        .filters-group { display: flex; gap: 12px; flex-wrap: wrap; }
+        .filters-group { display: flex; gap: 10px; flex-wrap: wrap; }
         .form-group { display: flex; flex-direction: column; }
         label { font-size: 9px; font-weight: bold; color: #636e72; margin-bottom: 3px; text-transform: uppercase; }
         input[type="month"], input[type="text"] { padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; width: 110px; }
-        input[type="number"] { padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; width: 60px; }
+        input[type="number"] { padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; width: 55px; }
         .table-input { padding: 4px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px; width: 70px; text-align: center; }
 
         .btn-group { display: flex; gap: 10px; }
@@ -139,6 +139,10 @@
                 <label>Kanty Rate</label>
                 <input type="number" id="kantyRate" value="0.50" step="0.01">
             </div>
+            <div class="form-group">
+                <label>Mixing Bale Rate</label>
+                <input type="number" id="mixingBaleRate" value="0.50" step="0.01">
+            </div>
         </div>
         
         <div class="btn-group">
@@ -192,6 +196,7 @@
         const frpBaleRate = parseFloat(document.getElementById('frpBaleRate').value) || 0;
         const u3WasteRate = parseFloat(document.getElementById('u3WasteRate').value) || 0;
         const kantyRate = parseFloat(document.getElementById('kantyRate').value) || 0;
+        const mixingBaleRate = parseFloat(document.getElementById('mixingBaleRate').value) || 0;
         
         if(!selectedMonth) {
             alert("Please select a billing month.");
@@ -221,7 +226,9 @@
             let qtyFRPBaleIssue = 0;
             let qtyU3WasteShifting = 0;
             let qtyKantyBaleShifting = 0;
+            let qtyMixingBaleShift = 0;
 
+            // 1. Mixing Unit - 3: RAW_MATERIAL_ISSUE & COTTON_ISSUE -> Issuing To (Dept) == OE Plant Unit no 3
             const checkMixing = (row) => {
                 if(!row["Date"]) return;
                 const d = row["Date"].split('T')[0];
@@ -235,6 +242,7 @@
             rawIssData.forEach(checkMixing);
             cotIssData.forEach(checkMixing);
 
+            // 2. Yarn Packed: YARN_REC -> Category == OE U-3 Yarn
             yarnRecData.forEach(row => {
                 if(!row["Date"]) return;
                 const d = row["Date"].split('T')[0];
@@ -246,6 +254,9 @@
                 }
             });
 
+            // 3. Unloading: RAW_MATERIAL_REC -> Category == Market Purchase Waste or Job Work
+            // 6. U - 3 Waste Bale Shifting: RAW_MATERIAL_REC -> Supplier Name == UNIT-3 and Item Description != MICRO DUST
+            // 7. Kanty Bale Shifting: RAW_MATERIAL_REC -> Category == Fiber Recycling Plant and Item Description in (Kanty, Kanty Black)
             rawRecData.forEach(row => {
                 if(!row["Date"]) return;
                 const d = row["Date"].split('T')[0];
@@ -267,11 +278,15 @@
                 }
             });
 
+            // 4. Loading: RAW_MATERIAL_ISSUE -> Issuing To (Dept) == Sale or Job Work
+            // 5. FRP Bale Issue: RAW_MATERIAL_ISSUE -> Issuing To (Dept) == Fiber Recycling Plant
+            // 8. Mixing Bale Shift: RAW_MATERIAL_ISSUE -> Issuing To (Dept) == OE Plant Unit no 3 and Category == Fiber Recycling Plant
             rawIssData.forEach(row => {
                 if(!row["Date"]) return;
                 const d = row["Date"].split('T')[0];
                 if (d.startsWith(selectedMonth)) {
                     const issuingTo = (row["Issuing To (Dept)"] || "").trim().toUpperCase();
+                    const cat = (row["Category"] || "").trim().toUpperCase();
                     const qty = parseFloat(row["Qty (KG)"] || 0);
 
                     if (issuingTo === "SALE" || issuingTo === "JOB WORK") {
@@ -279,6 +294,9 @@
                     }
                     if (issuingTo === "FIBER RECYCLING PLANT") {
                         qtyFRPBaleIssue += qty;
+                    }
+                    if (issuingTo === "OE PLANT UNIT NO 3" && cat === "FIBER RECYCLING PLANT") {
+                        qtyMixingBaleShift += qty;
                     }
                 }
             });
@@ -290,7 +308,8 @@
                 { desc: "Loading", qty: qtyLoading, rate: loadingRate },
                 { desc: "FRP Bale Issue", qty: qtyFRPBaleIssue, rate: frpBaleRate },
                 { desc: "U - 3 Waste Bale Shifting", qty: qtyU3WasteShifting, rate: u3WasteRate },
-                { desc: "Kanty Bale Shifting", qty: qtyKantyBaleShifting, rate: kantyRate }
+                { desc: "Kanty Bale Shifting", qty: qtyKantyBaleShifting, rate: kantyRate },
+                { desc: "Mixing Bale Shift", qty: qtyMixingBaleShift, rate: mixingBaleRate }
             ];
 
             renderTable();
