@@ -113,7 +113,7 @@
             </div>
             <div class="form-group">
                 <label>Mixing Rate</label>
-                <input type="number" id="mixingRate" value="0.15" step="0.01">
+                <input type="number" id="mixingRate" value="0.12" step="0.01">
             </div>
             <div class="form-group">
                 <label>Yarn Rate</label>
@@ -278,7 +278,7 @@
                 }
             });
 
-            // 4. Loading: RAW_MATERIAL_ISSUE -> Issuing To (Dept) == Sale or Job Work
+            // 4. Loading: RAW_MATERIAL_ISSUE -> Issuing To (Dept) == Sale or Job Work AND Item Description != MICRO DUST
             // 5. FRP Bale Issue: RAW_MATERIAL_ISSUE -> Issuing To (Dept) == Fiber Recycling Plant
             // 8. Mixing Bale Shift: RAW_MATERIAL_ISSUE -> Issuing To (Dept) == OE Plant Unit no 3 and Category == Fiber Recycling Plant
             rawIssData.forEach(row => {
@@ -287,9 +287,10 @@
                 if (d.startsWith(selectedMonth)) {
                     const issuingTo = (row["Issuing To (Dept)"] || "").trim().toUpperCase();
                     const cat = (row["Category"] || "").trim().toUpperCase();
+                    const item = (row["Item Description"] || "").trim().toUpperCase();
                     const qty = parseFloat(row["Qty (KG)"] || 0);
 
-                    if (issuingTo === "SALE" || issuingTo === "JOB WORK") {
+                    if ((issuingTo === "SALE" || issuingTo === "JOB WORK") && item !== "MICRO DUST") {
                         qtyLoading += qty;
                     }
                     if (issuingTo === "FIBER RECYCLING PLANT") {
