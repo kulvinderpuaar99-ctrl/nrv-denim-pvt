@@ -433,17 +433,20 @@
                 let isoDate = "";
                 if(row["Date"]) {
                     const d = new Date(row["Date"]);
-                    dateStr = d.toLocaleDateString('en-GB'); 
                     
+                    // Force strictly DD/MM/YYYY formatting to bypass browser quirks
                     const y = d.getFullYear();
                     const m = String(d.getMonth() + 1).padStart(2, '0');
                     const day = String(d.getDate()).padStart(2, '0');
+                    
                     isoDate = `${y}-${m}-${day}`;
+                    dateStr = `${day}/${m}/${y}`;
                 }
                 
+                // Added t="s" to the Date <td> to force SheetJS to treat it as string
                 if(dept === 'RAW_MATERIAL_REC') {
                     body.innerHTML += `<tr data-date="${isoDate}">
-                        <td>${dateStr}</td>
+                        <td t="s">${dateStr}</td>
                         <td>${row["Category"]||""}</td>
                         <td>${row["Supplier Name"]||""}</td>
                         <td>${row["Gate Pass / Invoice"]||""}</td>
@@ -455,7 +458,7 @@
                     </tr>`;
                 } else {
                     body.innerHTML += `<tr data-date="${isoDate}">
-                        <td>${dateStr}</td>
+                        <td t="s">${dateStr}</td>
                         <td>${row["Category"]||""}</td>
                         <td>${row["Issuing To (Dept)"]||""}</td>
                         <td>${row["Item Description"]}</td>
@@ -768,20 +771,43 @@
         const fromDate = document.getElementById(fromId).value;
         const toDate = document.getElementById(toId).value;
         if(!fromDate || !toDate) { alert("Please select both From and To dates"); return; }
+        
+        // Format YYYY-MM-DD to DD-MM-YYYY for safe file names
+        const formatFileNameDate = (dateStr) => {
+            const parts = dateStr.split('-');
+            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            return dateStr;
+        };
+
+        const fromStr = formatFileNameDate(fromDate);
+        const toStr = formatFileNameDate(toDate);
+
         const table = document.getElementById(tableId);
         const tempTable = document.createElement('table');
         tempTable.appendChild(table.rows[0].cloneNode(true));
+        
         Array.from(table.rows).slice(1).forEach(row => {
             const rowDate = row.getAttribute('data-date');
             if(rowDate && rowDate >= fromDate && rowDate <= toDate) {
                 tempTable.appendChild(row.cloneNode(true));
             }
         });
+        
         if(tempTable.rows.length <= 1) { alert("No data found for this date range"); return; }
-        XLSX.writeFile(XLSX.utils.table_to_book(tempTable), `${fileName}_${fromDate}_to_${toDate}.xlsx`);
+        XLSX.writeFile(XLSX.utils.table_to_book(tempTable), `${fileName}_${fromStr}_to_${toStr}.xlsx`);
     }
 
-    function exportToExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById("stockTable")), "Stock.xlsx"); }
+    function exportToExcel() { 
+        let fileName = "Stock.xlsx";
+        const monthVal = document.getElementById('reportMonth').value;
+        if(monthVal) {
+            const parts = monthVal.split('-');
+            // Format YYYY-MM into MM-YYYY for the file name
+            if(parts.length === 2) fileName = `Stock_${parts[1]}-${parts[0]}.xlsx`;
+        }
+        XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById("stockTable")), fileName); 
+    }
+    
     function filterStockTable() { let val = document.getElementById("stockFilter").value.toUpperCase(); Array.from(document.getElementById("stockTableBody").rows).forEach(r => r.style.display = r.textContent.toUpperCase().includes(val) ? "" : "none"); }
 </script>
 </body>
