@@ -160,19 +160,22 @@
             <thead>
                 <tr>
                     <th rowspan="2">Date</th>
-                    <th colspan="2" class="grp-rc-prd head-rc-prd">Reciept Recycle Plant</th>
-                    <th colspan="2" class="grp-rc-iss head-rc-iss">Issue Recycle Fiber</th>
-                    <th colspan="2" class="grp-rc-stk head-rc-stk">Stock Recycled Fiber (Total)</th>
+                    <th colspan="3" class="grp-rc-prd head-rc-prd">Reciept Recycle Plant</th>
+                    <th colspan="3" class="grp-rc-iss head-rc-iss">Issue Recycle Fiber</th>
+                    <th colspan="3" class="grp-rc-stk head-rc-stk">Stock Recycled Fiber (Total)</th>
                 </tr>
                 <tr>
                     <th class="grp-rc-prd head-rc-prd">Job Work Rec. (Fiber)</th>
                     <th class="grp-rc-prd head-rc-prd">Recycled Fiber ( In House )</th>
+                    <th class="grp-rc-prd head-rc-prd">Total</th>
                     
                     <th class="grp-rc-iss head-rc-iss">Job Work Issue (Fiber)</th>
                     <th class="grp-rc-iss head-rc-iss">Issue Fiber ( In House )</th>
+                    <th class="grp-rc-iss head-rc-iss">Total</th>
                     
                     <th class="grp-rc-stk head-rc-stk">Job Work Rec. (Fiber)</th>
                     <th class="grp-rc-stk head-rc-stk">Recycled Fiber ( In House )</th>
+                    <th class="grp-rc-stk head-rc-stk">Total</th>
                 </tr>
             </thead>
             <tbody id="reportDataBody"></tbody>
@@ -213,7 +216,7 @@
         const selectedMonth = document.getElementById('reportMonth').value;
         if(!selectedMonth) return;
         
-        tbody.innerHTML = "<tr><td colspan='7'>Syncing with server...</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='10'>Syncing with server...</td></tr>";
 
         try {
             const [respRec, respIss] = await Promise.all([
@@ -281,10 +284,10 @@
 
                     tbody.innerHTML += `<tr style="background-color: #fff9c4; font-weight: bold; color: #000;">
                         <td t="s">Opening</td>
-                        <td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td>
-                        <td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td>
+                        <td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td>
+                        <td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td>
                         
-                        <td class="grp-rc-stk">${openJW.toFixed(0)}</td><td class="grp-rc-stk">${openFib.toFixed(0)}</td>
+                        <td class="grp-rc-stk">${openJW.toFixed(0)}</td><td class="grp-rc-stk">${openFib.toFixed(0)}</td><td class="grp-rc-stk">${(openJW + openFib).toFixed(0)}</td>
                     </tr>`;
                     hasPrintedOpening = true;
                 }
@@ -300,12 +303,15 @@
                         
                         <td class="grp-rc-prd">${day.mr_jw_fib.toFixed(0)}</td>
                         <td class="grp-rc-prd">${day.prd_fib.toFixed(0)}</td>
+                        <td class="grp-rc-prd">${(day.mr_jw_fib + day.prd_fib).toFixed(0)}</td>
                         
                         <td class="grp-rc-iss">${day.jw_iss_fib.toFixed(0)}</td>
                         <td class="grp-rc-iss">${day.iss_fib.toFixed(0)}</td>
+                        <td class="grp-rc-iss">${(day.jw_iss_fib + day.iss_fib).toFixed(0)}</td>
                         
                         <td class="grp-rc-stk">${runJW.toFixed(0)}</td>
                         <td class="grp-rc-stk">${runFib.toFixed(0)}</td>
+                        <td class="grp-rc-stk">${(runJW + runFib).toFixed(0)}</td>
                     </tr>`;
                 }
             });
@@ -313,9 +319,9 @@
             if (!hasPrintedOpening) {
                 tbody.innerHTML += `<tr style="background-color: #fff9c4; font-weight: bold; color: #000;">
                     <td t="s">Opening</td>
-                    <td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td>
-                    <td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td>
-                    <td class="grp-rc-stk">${runJW.toFixed(0)}</td><td class="grp-rc-stk">${runFib.toFixed(0)}</td>
+                    <td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td><td class="grp-rc-prd">-</td>
+                    <td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td><td class="grp-rc-iss">-</td>
+                    <td class="grp-rc-stk">${runJW.toFixed(0)}</td><td class="grp-rc-stk">${runFib.toFixed(0)}</td><td class="grp-rc-stk">${(runJW + runFib).toFixed(0)}</td>
                 </tr>`;
             }
 
@@ -325,14 +331,16 @@
                     
                     <td class="grp-rc-prd">${sum.mrJW.toFixed(0)}</td>
                     <td class="grp-rc-prd">${sum.pF.toFixed(0)}</td>
+                    <td class="grp-rc-prd">${(sum.mrJW + sum.pF).toFixed(0)}</td>
                     
                     <td class="grp-rc-iss">${sum.jwIF.toFixed(0)}</td>
                     <td class="grp-rc-iss">${sum.iF.toFixed(0)}</td>
+                    <td class="grp-rc-iss">${(sum.jwIF + sum.iF).toFixed(0)}</td>
                     
-                    <td colspan="2" style="background:#f2f2f2; text-align:center;">STOCK EXCLUDED FROM TOTAL</td>
+                    <td colspan="3" style="background:#f2f2f2; text-align:center;">STOCK EXCLUDED FROM TOTAL</td>
                 </tr>`;
             }
-        } catch(e) { tbody.innerHTML = "<tr><td colspan='7' style='color:red;'>Error loading data.</td></tr>"; }
+        } catch(e) { tbody.innerHTML = "<tr><td colspan='10' style='color:red;'>Error loading data.</td></tr>"; }
     }
 
     function exportToExcel() {
