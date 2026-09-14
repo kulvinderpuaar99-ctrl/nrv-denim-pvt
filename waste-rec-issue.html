@@ -349,7 +349,7 @@
     let cachedArticles = [];
     let globalStockMap = {};
     let lineItems = []; 
-    let issueLineItems = []; // Array for multiple issue items
+    let issueLineItems = [];
 
     window.onload = () => { 
         document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7); 
@@ -381,7 +381,6 @@
             document.getElementById('issDate').valueAsDate = new Date();
             loadHistory('RAW_MATERIAL_ISSUE', 'issHistoryBody');
             
-            // Ensures lists are fully updated when user opens Issue app
             const [rR, rI] = await Promise.all([
                 fetch(`${API_URL}?Department=RAW_MATERIAL_REC&t=${Date.now()}`), 
                 fetch(`${API_URL}?Department=RAW_MATERIAL_ISSUE&t=${Date.now()}`)
@@ -411,14 +410,15 @@
     function fetchRecItemsByCategory() {
         const cat = document.getElementById('recCat').value;
         const list = document.getElementById('recItemsList');
-        list.innerHTML = "";
         
         const items = [...new Set(cachedArticles.filter(r => {
             const rowCat = r["Raw Material Category"] || r["Raw Material  Category"] || "";
             return rowCat.trim().toUpperCase() === cat.trim().toUpperCase();
         }).map(r => r["Article"] || r["Article"] || ""))];
 
-        items.forEach(i => { if(i) list.innerHTML += `<option value="${i}">`; });
+        let optionsHtml = "";
+        items.forEach(i => { if(i) optionsHtml += `<option value="${i}">`; });
+        list.innerHTML = optionsHtml;
     }
 
     async function loadHistory(dept, bodyId) {
@@ -427,25 +427,22 @@
         try {
             const res = await fetch(`${API_URL}?Department=${dept}&t=${Date.now()}`);
             const data = await res.json();
-            body.innerHTML = "";
-            data.reverse().forEach(row => {
+            
+            let rowsHtml = "";
+            [...data].reverse().forEach(row => {
                 let dateStr = "";
                 let isoDate = "";
                 if(row["Date"]) {
                     const d = new Date(row["Date"]);
-                    
-                    // Force strictly DD/MM/YYYY formatting to bypass browser quirks
                     const y = d.getFullYear();
                     const m = String(d.getMonth() + 1).padStart(2, '0');
                     const day = String(d.getDate()).padStart(2, '0');
-                    
                     isoDate = `${y}-${m}-${day}`;
                     dateStr = `${day}/${m}/${y}`;
                 }
                 
-                // Added t="s" to the Date <td> to force SheetJS to treat it as string
                 if(dept === 'RAW_MATERIAL_REC') {
-                    body.innerHTML += `<tr data-date="${isoDate}">
+                    rowsHtml += `<tr data-date="${isoDate}">
                         <td t="s">${dateStr}</td>
                         <td>${row["Category"]||""}</td>
                         <td>${row["Supplier Name"]||""}</td>
@@ -457,7 +454,7 @@
                         <td>${row["Total Amount"]}</td>
                     </tr>`;
                 } else {
-                    body.innerHTML += `<tr data-date="${isoDate}">
+                    rowsHtml += `<tr data-date="${isoDate}">
                         <td t="s">${dateStr}</td>
                         <td>${row["Category"]||""}</td>
                         <td>${row["Issuing To (Dept)"]||""}</td>
@@ -469,6 +466,7 @@
                     </tr>`;
                 }
             });
+            body.innerHTML = rowsHtml;
         } catch(e) { body.innerHTML = "<tr><td colspan='9'>Error</td></tr>"; }
     }
 
@@ -517,15 +515,20 @@
     function renderTable() {
         const tbody = document.getElementById('stockTableBody');
         const sK = document.getElementById('viewKg').checked, sB = document.getElementById('viewBales').checked, sA = document.getElementById('viewAmt').checked, hZ = document.getElementById('hideZero').checked;
-        tbody.innerHTML = "";
+        
+        let rowsHtml = "";
         let gOK=0, gOB=0, gOA=0, gRK=0, gRB=0, gRA=0, gIK=0, gIB=0, gIA=0, gCK=0, gCB=0, gCA=0;
+        
         for(let k in globalStockMap) {
             let e = globalStockMap[k], ck = e.opKg+e.reKg-e.isKg, cb = e.opBal+e.reBal-e.isBal, ca = e.opAmt+e.reAmt-e.isAmt;
             if(hZ && ck <= 0) continue;
             gOK+=e.opKg; gOB+=e.opBal; gOA+=e.opAmt; gRK+=e.reKg; gRB+=e.reBal; gRA+=e.reAmt; gIK+=e.isKg; gIB+=e.isBal; gIA+=e.isAmt; gCK+=ck; gCB+=cb; gCA+=ca;
             const fmt = (k,b,a,p="") => (sK?`<span class="val-kg">${p}${k.toFixed(2)} KG</span>`:"") + (sB?`<span class="val-bal">${p}${b.toFixed(0)} Bales</span>`:"") + (sA?`<span class="val-amt">₹${a.toFixed(2)}</span>`:"");
-            tbody.innerHTML += `<tr><td>${e.category}</td><td>${e.item}</td><td>${fmt(e.opKg,e.opBal,e.opAmt)}</td><td style="color:green">${fmt(e.reKg,e.reBal,e.reAmt,"+ ")}</td><td style="color:red">${fmt(e.isKg,e.isBal,e.isAmt,"- ")}</td><td class="${ck>=0?'bal-pos':'bal-neg'}">${fmt(ck,cb,ca)}</td><td>${ck<=0?'NIL':'OK'}</td></tr>`;
+            rowsHtml += `<tr><td>${e.category}</td><td>${e.item}</td><td>${fmt(e.opKg,e.opBal,e.opAmt)}</td><td style="color:green">${fmt(e.reKg,e.reBal,e.reAmt,"+ ")}</td><td style="color:red">${fmt(e.isKg,e.isBal,e.isAmt,"- ")}</td><td class="${ck>=0?'bal-pos':'bal-neg'}">${fmt(ck,cb,ca)}</td><td>${ck<=0?'NIL':'OK'}</td></tr>`;
         }
+        
+        tbody.innerHTML = rowsHtml;
+        
         const fF = (k,b,a) => (sK?k.toFixed(2)+" KG<br>":"")+(sB?b.toFixed(0)+" Bales<br>":"")+(sA?"₹"+a.toFixed(2):"");
         document.getElementById('stockTableFoot').innerHTML = `<tr style="background:#2c3e50; color:white; font-weight:bold;"><td colspan="2">TOTAL:</td><td>${fF(gOK,gOB,gOA)}</td><td>${fF(gRK,gRB,gRA)}</td><td>${fF(gIK,gIB,gIA)}</td><td>${fF(gCK,gCB,gCA)}</td><td></td></tr>`;
     }
@@ -560,13 +563,14 @@
 
     function renderLineItems() {
         const body = document.getElementById('lineItemBody');
-        body.innerHTML = "";
         if(lineItems.length === 0) {
             body.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #999;">No items added yet.</td></tr>';
             return;
         }
+        
+        let rowsHtml = "";
         lineItems.forEach((row, index) => {
-            body.innerHTML += `<tr>
+            rowsHtml += `<tr>
                 <td>${row.item}</td>
                 <td>${row.qty}</td>
                 <td>${row.bales}</td>
@@ -575,6 +579,7 @@
                 <td style="text-align: center;"><button type="button" style="background: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer; padding: 5px 10px;" onclick="removeLineItem(${index})">X</button></td>
             </tr>`;
         });
+        body.innerHTML = rowsHtml;
     }
 
     function removeLineItem(index) {
@@ -582,7 +587,6 @@
         renderLineItems();
     }
 
-    // ISSUE APP CALCULATIONS
     function calculateIss() { 
         const q = document.getElementById('tempIssQty').value || 0;
         const r = document.getElementById('tempIssRate').value || 0; 
@@ -606,8 +610,9 @@
         }
         
         const items = [...new Set(cachedReceipts.filter(r => (r["Category"]||"").toUpperCase() === cat.toUpperCase()).map(r => r["Item Description"]))];
-        sel.innerHTML = '<option value="">Select Item</option>';
-        items.forEach(i => { if(i) sel.innerHTML += `<option value="${i}">${i}</option>`; });
+        let optionsHtml = '<option value="">Select Item</option>';
+        items.forEach(i => { if(i) optionsHtml += `<option value="${i}">${i}</option>`; });
+        sel.innerHTML = optionsHtml;
     }
 
     function fetchItemStats() {
@@ -621,7 +626,6 @@
         calculateIss();
     }
 
-    // Add multiple items for issue
     function addIssueLineItem() {
         const cat = document.getElementById('tempIssCat').value;
         const item = document.getElementById('tempIssItem').value;
@@ -649,13 +653,14 @@
 
     function renderIssueLineItems() {
         const body = document.getElementById('issueLineItemBody');
-        body.innerHTML = "";
         if(issueLineItems.length === 0) {
             body.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #999;">No items added yet.</td></tr>';
             return;
         }
+        
+        let rowsHtml = "";
         issueLineItems.forEach((row, index) => {
-            body.innerHTML += `<tr>
+            rowsHtml += `<tr>
                 <td>${row.cat}</td>
                 <td>${row.item}</td>
                 <td>${row.qty}</td>
@@ -665,6 +670,7 @@
                 <td style="text-align: center;"><button type="button" style="background: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer; padding: 5px 10px;" onclick="removeIssueLineItem(${index})">X</button></td>
             </tr>`;
         });
+        body.innerHTML = rowsHtml;
     }
 
     function removeIssueLineItem(index) {
@@ -759,7 +765,6 @@
             renderIssueLineItems();
             loadHistory("RAW_MATERIAL_ISSUE", "issHistoryBody");
             
-            // Re-fetch issues to ensure next balance checks update properly
             const res = await fetch(`${API_URL}?Department=RAW_MATERIAL_ISSUE&t=${Date.now()}`); 
             cachedIssues = await res.json();
         } catch(e) { 
@@ -772,7 +777,6 @@
         const toDate = document.getElementById(toId).value;
         if(!fromDate || !toDate) { alert("Please select both From and To dates"); return; }
         
-        // Format YYYY-MM-DD to DD-MM-YYYY for safe file names
         const formatFileNameDate = (dateStr) => {
             const parts = dateStr.split('-');
             if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
@@ -802,7 +806,6 @@
         const monthVal = document.getElementById('reportMonth').value;
         if(monthVal) {
             const parts = monthVal.split('-');
-            // Format YYYY-MM into MM-YYYY for the file name
             if(parts.length === 2) fileName = `Stock_${parts[1]}-${parts[0]}.xlsx`;
         }
         XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById("stockTable")), fileName); 
