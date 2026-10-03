@@ -165,6 +165,7 @@
             <select id="periodType" onchange="togglePeriod(); loadRecyclingData()">
                 <option value="date">Specific Date</option>
                 <option value="month">Entire Month</option>
+                <option value="month_range">Month Range</option>
             </select>
         </div>
         <div class="filter-group" id="dateFilterGroup">
@@ -175,6 +176,17 @@
             <label>Target Month</label>
             <input type="month" id="reportMonth" onchange="loadRecyclingData()">
         </div>
+        
+        <!-- NEW: From and To Month Inputs -->
+        <div class="filter-group" id="monthRangeFromGroup" style="display: none;">
+            <label>From Month</label>
+            <input type="month" id="reportMonthFrom" onchange="loadRecyclingData()">
+        </div>
+        <div class="filter-group" id="monthRangeToGroup" style="display: none;">
+            <label>To Month</label>
+            <input type="month" id="reportMonthTo" onchange="loadRecyclingData()">
+        </div>
+
         <div class="filter-group">
             <label style="color: var(--danger);">Less WIP (KG)</label>
             <input type="number" id="wipQty" value="0" min="0" step="0.01" onchange="calculateAndRender()" style="width: 100px; border-color: var(--danger);">
@@ -300,7 +312,12 @@
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1); 
         document.getElementById('reportDate').value = yesterday.toISOString().split('T')[0];
-        document.getElementById('reportMonth').value = yesterday.toISOString().slice(0, 7);
+        
+        const currentMonthStr = yesterday.toISOString().slice(0, 7);
+        document.getElementById('reportMonth').value = currentMonthStr;
+        document.getElementById('reportMonthFrom').value = currentMonthStr;
+        document.getElementById('reportMonthTo').value = currentMonthStr;
+        
         loadRecyclingData();
     };
 
@@ -308,6 +325,8 @@
         const type = document.getElementById('periodType').value;
         document.getElementById('dateFilterGroup').style.display = type === 'date' ? 'flex' : 'none';
         document.getElementById('monthFilterGroup').style.display = type === 'month' ? 'flex' : 'none';
+        document.getElementById('monthRangeFromGroup').style.display = type === 'month_range' ? 'flex' : 'none';
+        document.getElementById('monthRangeToGroup').style.display = type === 'month_range' ? 'flex' : 'none';
     }
 
     async function loadRecyclingData() {
@@ -339,7 +358,13 @@
 
     function aggregateData(dataArray, periodType, targetDate, targetMonth) {
         const grouped = {};
-        const displayDate = periodType === 'month' ? targetMonth : targetDate;
+        
+        let displayDate = targetDate;
+        if (periodType === 'month') {
+            displayDate = targetMonth;
+        } else if (periodType === 'month_range') {
+            displayDate = document.getElementById('reportMonthFrom').value + " to " + document.getElementById('reportMonthTo').value;
+        }
 
         dataArray.forEach(item => {
             const key = item["Item Description"] + "|" + item["Category"] + "|" + (item.outputTag || "");
@@ -363,14 +388,19 @@
     function filterData(receipts, issues, periodType, targetDate, targetMonth) {
         let tempInputs = [];
         let tempOutputs = [];
+        
+        const fromMonth = document.getElementById('reportMonthFrom').value;
+        const toMonth = document.getElementById('reportMonthTo').value;
 
         issues.forEach(item => {
             if(!item["Date"]) return;
             const itemDateStr = item["Date"].split('T')[0];
             const itemMonth = itemDateStr.slice(0, 7);
             
-            const matchPeriod = (periodType === 'date' && itemDateStr === targetDate) || 
-                                (periodType === 'month' && itemMonth === targetMonth);
+            let matchPeriod = false;
+            if (periodType === 'date') matchPeriod = (itemDateStr === targetDate);
+            else if (periodType === 'month') matchPeriod = (itemMonth === targetMonth);
+            else if (periodType === 'month_range') matchPeriod = (itemMonth >= fromMonth && itemMonth <= toMonth);
 
             const issuingToDept = String(item["Issuing To (Dept)"] || "").toUpperCase().trim();
             const isJobWork = issuingToDept.includes("JOB WORK") || issuingToDept === "JOBWORK";
@@ -385,8 +415,10 @@
             const itemDateStr = item["Date"].split('T')[0];
             const itemMonth = itemDateStr.slice(0, 7);
 
-            const matchPeriod = (periodType === 'date' && itemDateStr === targetDate) || 
-                                (periodType === 'month' && itemMonth === targetMonth);
+            let matchPeriod = false;
+            if (periodType === 'date') matchPeriod = (itemDateStr === targetDate);
+            else if (periodType === 'month') matchPeriod = (itemMonth === targetMonth);
+            else if (periodType === 'month_range') matchPeriod = (itemMonth >= fromMonth && itemMonth <= toMonth);
 
             const cat = String(item["Category"] || "").toUpperCase().trim();
             const desc = String(item["Item Description"] || "").toUpperCase().trim();
@@ -611,7 +643,13 @@
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Recycling Plant Balance");
         
-        const periodStr = document.getElementById('periodType').value === 'month' ? document.getElementById('reportMonth').value : document.getElementById('reportDate').value;
+        let periodStr = document.getElementById('reportDate').value;
+        const type = document.getElementById('periodType').value;
+        if (type === 'month') {
+            periodStr = document.getElementById('reportMonth').value;
+        } else if (type === 'month_range') {
+            periodStr = `${document.getElementById('reportMonthFrom').value}_to_${document.getElementById('reportMonthTo').value}`;
+        }
         XLSX.writeFile(wb, `Fiber_Recycling_Analysis_${periodStr}.xlsx`);
     }
 </script>
