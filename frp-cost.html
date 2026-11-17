@@ -115,6 +115,24 @@
         .val-primary { font-weight: bold; font-size: 12px; display: block; }
         .val-sub { font-size: 10px; color: #718096; }
 
+        .manual-cost-input {
+            width: 85px;
+            padding: 4px 6px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            text-align: right;
+            font-family: inherit;
+            font-size: 12px;
+            background: #fffef0;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .manual-cost-input:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 3px rgba(39, 174, 96, 0.3);
+        }
+
         @media print {
             @page { 
                 size: landscape; 
@@ -126,7 +144,6 @@
             .tables-grid { display: block !important; }
             .table-card { width: 100% !important; margin-bottom: 0 !important; page-break-inside: avoid; }
             
-            /* Force the second table (Recovered Products & Wastage) onto page 2 */
             .tables-grid .table-card:nth-child(2) {
                 page-break-before: always;
                 break-before: page;
@@ -209,7 +226,7 @@
                         <th>Material/Waste Type</th>
                         <th style="text-align: right;">Quantity</th>
                         <th style="text-align: right;">Material %</th>
-                        <th style="text-align: right;">Avg Unit Cost</th>
+                        <th style="text-align: right;">Avg Unit Cost (₹)</th>
                         <th style="text-align: right;">Cost As Per Recovery</th>
                         <th style="text-align: right;">Total Value</th>
                     </tr>
@@ -265,13 +282,13 @@
     
     let rawInputs = [];
     let rawOutputs = [];
-    let totalInpQtyGlobal = 0; // Global reference for total material feed
-    let totalRecoveryGlobal = 0; // Global reference for total recovery yield %
-    let mainProductRecoveryGlobal = 0; // Global reference for main product (Recycled Fiber) recovery %
+    let totalInpQtyGlobal = 0; 
+    let totalRecoveryGlobal = 0; 
+    let mainProductRecoveryGlobal = 0; 
 
     window.onload = () => {
         const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1); // Set to one day back automatically
+        yesterday.setDate(yesterday.getDate() - 1); 
         document.getElementById('reportDate').value = yesterday.toISOString().split('T')[0];
         document.getElementById('reportMonth').value = yesterday.toISOString().slice(0, 7);
         loadRecyclingData();
@@ -310,27 +327,29 @@
         }
     }
 
-    // Helper Function to Aggregate Sums
     function aggregateData(dataArray, periodType, targetDate, targetMonth) {
         const grouped = {};
         const displayDate = periodType === 'month' ? targetMonth : targetDate;
 
         dataArray.forEach(item => {
-            // Create a unique key using Description, Category and Tag
             const key = item["Item Description"] + "|" + item["Category"] + "|" + (item.outputTag || "");
 
             if (!grouped[key]) {
-                // First time seeing this item, create a new object clone
                 grouped[key] = { ...item };
                 grouped[key].displayDate = displayDate;
                 grouped[key]["Qty (KG)"] = parseFloat(item["Qty (KG)"] || 0);
                 grouped[key]["Bales"] = parseFloat(item["Bales"] || 0);
                 grouped[key]["Total Amount"] = parseFloat(item["Total Amount"] || 0);
+                
+                const initialQty = grouped[key]["Qty (KG)"];
+                grouped[key].customUnitCost = initialQty > 0 ? grouped[key]["Total Amount"] / initialQty : 0;
             } else {
-                // Item exists, add to existing totals
                 grouped[key]["Qty (KG)"] += parseFloat(item["Qty (KG)"] || 0);
                 grouped[key]["Bales"] += parseFloat(item["Bales"] || 0);
                 grouped[key]["Total Amount"] += parseFloat(item["Total Amount"] || 0);
+                
+                const totalQty = grouped[key]["Qty (KG)"];
+                grouped[key].customUnitCost = totalQty > 0 ? grouped[key]["Total Amount"] / totalQty : 0;
             }
         });
 
@@ -341,7 +360,6 @@
         let tempInputs = [];
         let tempOutputs = [];
 
-        // 1. INPUT LOGIC (Issues to Plant)
         issues.forEach(item => {
             if(!item["Date"]) return;
             const itemDateStr = item["Date"].split('T')[0];
@@ -358,7 +376,6 @@
             }
         });
 
-        // 2. OUTPUT LOGIC (Recovered Products & Waste)
         receipts.forEach(item => {
             if(!item["Date"]) return;
             const itemDateStr = item["Date"].split('T')[0];
@@ -382,9 +399,17 @@
             }
         });
 
-        // 3. AGGREGATE FINAL ARRAYS
         rawInputs = aggregateData(tempInputs, periodType, targetDate, targetMonth);
         rawOutputs = aggregateData(tempOutputs, periodType, targetDate, targetMonth);
+    }
+
+    function updateUnitCost(index, value) {
+        const val = parseFloat(value);
+        if (!isNaN(val)) {
+            rawInputs[index].customUnitCost = val;
+            rawInputs[index]["Total Amount"] = rawInputs[index]["Qty (KG)"] * val;
+            calculateAndRender();
+        }
     }
 
     function calculateAndRender() {
@@ -398,11 +423,9 @@
         let totalOutQty = 0, totalOutBales = 0, totalOutAmt = 0;
         let mainProductQty = 0;
 
-        // Pre-calculate Total Feed (Inputs) and Total Recovered (Outputs) to get Plant Yield Rate before rendering
         rawInputs.forEach(item => {
             totalInpQty += parseFloat(item["Qty (KG)"] || 0);
             totalInpBales += parseFloat(item["Bales"] || 0);
-            totalInpAmt += parseFloat(item["Total Amount"] || 0);
         });
         totalInpQtyGlobal = totalInpQty; 
 
@@ -428,14 +451,19 @@
         if (rawInputs.length === 0) {
             inpTbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#95a5a6;">No waste raw materials issued for this period.</td></tr>`;
         } else {
-            rawInputs.forEach(item => {
+            rawInputs.forEach((item, index) => {
                 const qty = item["Qty (KG)"];
                 const bales = item["Bales"];
-                const val = item["Total Amount"];
-                const unitCost = qty > 0 ? val / qty : 0; 
-                const materialPct = totalInpQty > 0 ? (qty / totalInpQty) * 100 : 0; 
                 
-                // Formula: (Avg Unit Cost / Recycled Fiber Recovery * 100) * Material % / 100
+                if (item.customUnitCost === undefined) {
+                    item.customUnitCost = qty > 0 ? item["Total Amount"] / qty : 0;
+                }
+                const unitCost = item.customUnitCost;
+                const val = qty * unitCost;
+                item["Total Amount"] = val; // update calculated total amount
+                totalInpAmt += val;
+
+                const materialPct = totalInpQty > 0 ? (qty / totalInpQty) * 100 : 0; 
                 const costAsPerRecovery = mainProductRecoveryRate > 0 ? ((unitCost / mainProductRecoveryRate) * 100) * (materialPct / 100) : 0;
                 totalCostPerRecoverySum += costAsPerRecovery;
 
@@ -453,7 +481,9 @@
                         <td style="text-align: right; font-weight: bold; color: #2b6cb0;">
                             ${materialPct.toFixed(2)} %
                         </td>
-                        <td style="text-align: right;">₹ ${unitCost.toFixed(2)} / KG</td>
+                        <td style="text-align: right;">
+                            <input type="number" step="0.01" class="manual-cost-input" value="${unitCost.toFixed(2)}" onchange="updateUnitCost(${index}, this.value)">
+                        </td>
                         <td style="text-align: right; font-weight: bold; color: var(--accent);">
                             ₹ ${costAsPerRecovery.toFixed(2)} / KG
                         </td>
@@ -535,11 +565,13 @@
         ];
 
         rawInputs.forEach(x => {
-            const matPct = totalInpQtyGlobal > 0 ? (parseFloat(x["Qty (KG)"] || 0) / totalInpQtyGlobal) * 100 : 0;
-            const unitCost = x["Qty (KG)"] > 0 ? x["Total Amount"] / x["Qty (KG)"] : 0;
+            const qty = parseFloat(x["Qty (KG)"] || 0);
+            const unitCost = x.customUnitCost !== undefined ? x.customUnitCost : (qty > 0 ? x["Total Amount"] / qty : 0);
+            const totalAmt = qty * unitCost;
+            const matPct = totalInpQtyGlobal > 0 ? (qty / totalInpQtyGlobal) * 100 : 0;
             const costAsPerRecovery = mainProductRecoveryGlobal > 0 ? ((unitCost / mainProductRecoveryGlobal) * 100) * (matPct / 100) : 0;
             
-            data.push([x.displayDate, x["Item Description"], x["Category"], x["Qty (KG)"], matPct.toFixed(2) + "%", unitCost.toFixed(2), costAsPerRecovery.toFixed(2), x["Bales"], x["Total Amount"]]);
+            data.push([x.displayDate, x["Item Description"], x["Category"], qty, matPct.toFixed(2) + "%", unitCost.toFixed(2), costAsPerRecovery.toFixed(2), x["Bales"], totalAmt]);
         });
 
         data.push([]);
